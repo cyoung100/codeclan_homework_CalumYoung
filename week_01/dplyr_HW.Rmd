@@ -1,0 +1,98 @@
+---
+title: "Dplyr Homework"
+output: html_notebook
+---
+
+```{r}
+library(CodeClanData)
+drinks_content
+library(dplyr)
+
+```
+
+
+
+##Q1 dimensions; columns = 18, rows = 242, types = chr, num, names = below;, Vitamin C % etc, 1 NA value found
+
+```{r}
+glimpse(drinks_content)
+names(drinks_content)
+sum(is.na(drinks_content))
+
+```
+##Q2
+```{r}
+
+drinks_content<-na.omit(drinks_content) %>% 
+  select(Beverage_category,Beverage,Beverage_prep,Calories)
+
+drinks_content
+
+```
+
+
+##Q3
+```{r}
+drinks_content %>% 
+  mutate(calorie_diff = Calories - 135,.after = Beverage) %>% 
+  arrange(calorie_diff) %>% 
+  select(calorie_diff,Beverage)
+
+```
+##Q4
+```{r}
+max_cal<-drinks_content %>%
+  group_by(Beverage_category) %>% 
+  summarise(avg_cal = mean(Calories))
+
+max_cal %>% 
+  arrange(desc(avg_cal))
+
+
+min_cal<-drinks_content %>%
+  group_by(Beverage_category) %>% 
+  summarise(avg_cal = mean(Calories))
+
+min_cal %>% 
+  arrange(-desc(avg_cal))
+
+```
+##Smoothies, Frappuccino® Blended Coffee and Signature Espresso Drinks contain the highest average calorie counts with 282.2, 276.9, and 250.0, respectively.
+
+### Coffee (4.25), Shaken Iced Beverages (115.9) and Classic espresso drinks (140.2) showed the lowest average calorie counts.
+
+##q5
+```{r}
+bev_prep_avg<-drinks_content
+  
+  bev_prep_avg %>% 
+    group_by(Beverage_prep) %>% 
+    mutate(avg_prep_cal = mean(Calories)) %>% 
+    select(Beverage_prep,avg_prep_cal)
+  
+
+```
+##Q6
+```{r}
+
+bev_prep_avg
+
+bev_prep_avg %>%
+  mutate(all_drink_avg = mean(Calories)) %>% 
+  select(all_drink_avg,Calories,Beverage_prep) %>% 
+  filter(Calories > all_drink_avg) %>% 
+  group_by(Beverage_prep)
+
+
+
+```
+
+##could not get output to combine by groups to neaten display
+
+
+```{r}
+drinks_content %>% 
+  filter(Calories == 0)
+```
+
+##unsure of combnination Q, surely 0 calories is desired choice
