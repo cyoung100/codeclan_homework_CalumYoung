@@ -17,10 +17,16 @@ library(dplyr)
 ```{r}
 glimpse(drinks_content)
 names(drinks_content)
-sum(is.na(drinks_content))
+
+drinks_content %>% 
+filter(is.na(Calories))
+
 
 ```
 ##Q2
+
+
+
 ```{r}
 
 drinks_content<-na.omit(drinks_content) %>% 
@@ -85,6 +91,11 @@ bev_prep_avg %>%
 
 
 
+average <-drinks_content %>% 
+  summarise(mean)
+  
+
+
 ```
 
 ##could not get output to combine by groups to neaten display
@@ -96,3 +107,15 @@ drinks_content %>%
 ```
 
 ##unsure of combnination Q, surely 0 calories is desired choice
+
+
+```{r}
+library(dplyr)
+drinks_content
+
+?is.na
+filter(is.na(Calories)==F)
+```
+
+
+
