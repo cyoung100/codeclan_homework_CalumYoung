@@ -2,13 +2,14 @@
 library(dplyr)
 library(tidyverse)
 library(skimr)
-movies<-read_csv("movies.csv")
+library(readr)
+movies<-read.csv("movies.csv")
 movies
 skim(movies)
 movies<-movies
 unique(movies)
 names(movies)
-
+read_
 ```
 ##Q1
 - remove NAs, impute/remove
@@ -105,5 +106,9 @@ Save this into a new object called movie_budgets.
 ##usure with this, struggled doing ranges of values and what %% == 0 etc is in syntax
 
 
-##QE2 -- brain no work now
+##QE2 -- bTake the original dataset with all the variables. Using across and where, summarise the number of missing values, first across all columns of type character, and then across all columns of type numeric.
+```{r}
+
+```
+
 
