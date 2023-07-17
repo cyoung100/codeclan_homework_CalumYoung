@@ -1,0 +1,8 @@
+"0",""
+"0","top_5_diff_from_mean <-  pages_mean %>% "
+"0","                      ungroup() %>% "
+"0","                      slice_max(diff_from_overall_avg, n = 5) %>% "
+"0","                      select(title,diff_from_overall_avg,num_pages,page_length_avg) %>% "
+"0","                      arrange(desc(diff_from_overall_avg))"
+"0",""
+"0","top_5_diff_from_mean"

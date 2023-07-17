@@ -1,0 +1,4 @@
+"0","drinks_content %>% "
+"0","  mutate(calorie_diff = Calories - 135,.after = Beverage) %>% "
+"0","  arrange(calorie_diff) %>% "
+"0","  select(calorie_diff,Beverage)"

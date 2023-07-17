@@ -1,0 +1,7 @@
+"0","taster_sample<-wine_subset %>% "
+"0","  na.omit(taster_name) %>%"
+"0","  distinct(taster_name) %>% "
+"0","  sample_n(5) %>% "
+"0","  pull(taster_name)"
+"2","Error: object 'wine_subset' not found
+"

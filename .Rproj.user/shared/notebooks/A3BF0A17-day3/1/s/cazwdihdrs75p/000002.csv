@@ -1,0 +1,8 @@
+"0","```r
+students_big %>% 
+select(favourite_physical_activity) %>% 
+  mutate(favourite_physical_activity = if_else(favourite_physical_activity == \"Football/Soccer\", \"Football\",favourite_physical_activity))
+
+
+
+```"

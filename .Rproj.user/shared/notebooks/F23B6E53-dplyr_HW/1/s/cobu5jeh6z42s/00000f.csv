@@ -1,0 +1,6 @@
+"0","max_cal<-drinks_content %>%"
+"0","  group_by(Beverage_category) %>% "
+"0","  summarise(avg_cal = mean(Calories))"
+"0",""
+"0","max_cal %>% "
+"0","  arrange(desc(avg_cal))"

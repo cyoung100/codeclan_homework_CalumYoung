@@ -1,0 +1,5 @@
+"0",""
+"0","drinks_content<-na.omit(drinks_content) %>% "
+"0","  select(Beverage_category,Beverage,Beverage_prep,Calories)"
+"0",""
+"0","drinks_content"

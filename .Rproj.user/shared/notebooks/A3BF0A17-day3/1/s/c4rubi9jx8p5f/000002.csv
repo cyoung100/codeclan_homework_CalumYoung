@@ -1,0 +1,6 @@
+"0","```r
+students_big %>% 
+select(handed) %>% 
+  mutate(handed = if_else(handed == \"L\", \"Left\", \"Right\"))
+
+```"

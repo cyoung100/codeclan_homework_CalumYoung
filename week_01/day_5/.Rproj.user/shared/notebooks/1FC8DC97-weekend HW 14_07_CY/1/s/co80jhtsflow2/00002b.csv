@@ -1,0 +1,8 @@
+"0",""
+"0","## Gordon Korman, Dr. Seuss and Roald Dahl / Quentn Blake wrote 17, 16, and 10 short"
+"0","## books, repsectively. "
+"0",""
+"0","pamphlet_people <- author_english %>% "
+"0","                  filter(page_num_group == ""pamphlet"")"
+"0",""
+"0","pamphlet_people "

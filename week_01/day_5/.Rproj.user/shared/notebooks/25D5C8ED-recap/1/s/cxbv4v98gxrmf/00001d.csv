@@ -1,0 +1,17 @@
+"0",""
+"0","# grouped data"
+"0","by_position <- tyrell_jobs %>% "
+"0","  group_by(position)"
+"0",""
+"0","# can view the individual tables"
+"0","by_position %>% "
+"0","  group_split()"
+"1","<list_of<
+  tbl_df<
+    position: character
+    salary  : double
+  >
+>[2]>
+"
+"1","[[1]]
+"

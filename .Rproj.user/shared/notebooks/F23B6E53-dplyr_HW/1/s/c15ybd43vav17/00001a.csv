@@ -1,0 +1,4 @@
+"0","filter(is.na(Calories)==F)
+"
+"2","Error: object 'Calories' not found
+"

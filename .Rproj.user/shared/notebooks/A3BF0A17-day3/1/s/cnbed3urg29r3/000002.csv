@@ -1,0 +1,26 @@
+"0","```r
+library(dplyr)
+```"
+"1","Warning: package ‘dplyr’ was built under R version 4.3.1
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+"
+"0","```r
+library(tidyr)
+```"
+"1","Warning: package ‘tidyr’ was built under R version 4.3.1
+"
+"0","```r
+comms_data<- read.csv(\"telecom_data.csv\")
+
+##are nas present, shows
+comms_data %>% 
+  filter(is.na(monthly_charges))
+```"

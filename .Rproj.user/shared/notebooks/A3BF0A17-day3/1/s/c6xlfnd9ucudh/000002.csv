@@ -1,0 +1,13 @@
+"0","```r
+##build column showing t/f meets criteria
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = ageyears > 12)
+
+##builds column with output depending on value in vector
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = if_else(ageyears > 12, \"Older than 12\", \"12 or younger\"))
+
+
+```"

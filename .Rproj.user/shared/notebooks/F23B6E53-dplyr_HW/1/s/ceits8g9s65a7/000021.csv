@@ -1,0 +1,13 @@
+"0",""
+"0",""
+"0",""
+"0","average <-drinks_content %>% "
+"0","  summarise(mean)"
+"1","[1m[33mError[39m in `summarise()`:[22m
+[38;5;255m[36mℹ[38;5;255m In argument: `mean`.[39m
+[1mCaused by error:[22m
+[38;5;255m[33m![38;5;255m `mean` must be a vector, not a function.[39m
+Backtrace:
+[90m  1. [39mdrinks_content %>% summarise(mean)
+[90m 11. [39m[1mdplyr[22m:::dplyr_internal_error(...)
+"

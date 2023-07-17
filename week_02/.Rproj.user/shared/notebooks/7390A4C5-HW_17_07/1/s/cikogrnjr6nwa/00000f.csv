@@ -1,0 +1,3 @@
+"0",""
+"0","card_cust <- right_join(cust_base, card_base, ""cust_id"")"
+"0","           "

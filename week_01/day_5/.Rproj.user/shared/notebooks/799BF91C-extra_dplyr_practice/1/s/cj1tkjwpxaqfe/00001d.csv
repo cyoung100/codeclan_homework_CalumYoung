@@ -1,0 +1,4 @@
+"0","wine<- read_csv(""data/wine_ratings.csv"")
+"
+"2","Error: 'data/wine_ratings.csv' does not exist in current working directory ('C:/Users/calum/OneDrive/Desktop/CodeClan/My notes').
+"

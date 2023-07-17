@@ -1,0 +1,8 @@
+"0"," "
+"0","##subset desired coolumns"
+"0","movies_selected<-movies %>% "
+"0","  select(title,runtime,budget)"
+"0",""
+"0","##identify NAs and whihc col"
+"0","movies_selected %>% "
+"0","  summarise(across(everything(),~sum(is.na(.))))"

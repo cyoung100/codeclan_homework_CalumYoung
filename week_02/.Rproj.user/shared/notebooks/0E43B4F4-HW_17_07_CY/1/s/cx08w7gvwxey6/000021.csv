@@ -1,0 +1,5 @@
+"0","trans_base_rename <- trans_base %>% "
+"0","  rename(card_number = credit_card_id)"
+"0",""
+"0","filter_join <- semi_join(card_base, trans_base_rename, by = ""card_number"")"
+"0",""

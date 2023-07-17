@@ -1,0 +1,5 @@
+"0","movies_imputed<-movies_runtime %>%"
+"0","  mutate(runtime = coalesce(runtime, median(runtime,na.rm = T)))"
+"0","  "
+"0","movies_imputed %>%"
+"0","  filter(is.na(runtime))"

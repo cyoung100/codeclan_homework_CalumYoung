@@ -1,0 +1,7 @@
+"0","```r
+
+##gives a count of nas in DF
+
+comms_data %>% 
+  summarise(count = sum(is.na(monthly_charges)))
+```"

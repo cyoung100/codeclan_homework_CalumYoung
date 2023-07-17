@@ -1,0 +1,114 @@
+```{r}
+library(dplyr)
+library(tidyverse)
+library(skimr)
+library(readr)
+movies<-read.csv("movies.csv")
+movies
+skim(movies)
+movies<-movies
+unique(movies)
+names(movies)
+read_
+```
+##Q1
+- remove NAs, impute/remove
+- fix column names, clean with janitor
+
+
+
+##Q2 
+
+```{r}
+ 
+##subset desired coolumns
+movies_selected<-movies %>% 
+  select(title,runtime,budget)
+
+##identify NAs and whihc col
+movies_selected %>% 
+  summarise(across(everything(),~sum(is.na(.))))
+
+##or anywhere
+movies_selected %>% 
+  summarise(count = sum(is.na(.)))
+
+```
+## 2 missing values in runtime, 0 in title and budget.
+
+##Q4
+```{r}
+##change 0 runtime values to NAs
+movies_runtime<-movies_selected %>%
+  mutate(runtime = na_if(runtime, 0))
+
+##check NAs are found
+movies_runtime %>%
+  filter(is.na(runtime))
+
+```
+
+##Q5 change na values to median value with coalesce and remove NA
+```{r}
+movies_imputed<-movies_runtime %>%
+  mutate(runtime = coalesce(runtime, median(runtime,na.rm = T)))
+  
+movies_imputed %>%
+  filter(is.na(runtime))
+
+```
+##Q6 find 10 shortest/longest movies
+```{r}
+movies_imputed %>% 
+  slice_min(runtime, n = 10)
+
+movies_imputed %>% 
+  slice_max(runtime, n = 10)
+```
+##Q7 Using the if_else function, impute anything with a budget below $100 with the median budget. Overwrite your movies_imputed so it contains the new budget values.
+
+
+```{r}
+
+median_budget<-median(movies_imputed$budget)
+median_budget
+
+movies_imputed<-movies_imputed %>% 
+  mutate(budget = if_else(budget < 100, median_budget,budget))
+
+##or - but this took longer to figure out - 
+
+movies_imputed<-movies_imputed %>% 
+  mutate(budget = if_else(budget < 100, median(budget),budget))
+         
+
+
+```
+
+##QE1
+Using case_when, create a new column called budget_type and label budgets as follows:
+
+Budgets below 12 million as ‘Small budget’
+Budgets between 12 and 40 million as ‘Medium budget’
+Budgets 40 millions and above as ‘Big budget’
+Save this into a new object called movie_budgets.
+```{r}
+         
+   movie_budgets <-movies_imputed %>% mutate(budget_type = 
+                         case_when(budget >= 100 & budget < 12e6   ~ "Small Budget", 
+                                   budget > 12e6 & budget < 40e6 ~ "Medium Budget",
+                                   budget >= 40e6 & budget <= 380e6 ~ "Big Budget", TRUE ~ "Oth"))
+     
+                                  
+   
+```   
+
+##usure with this, struggled doing ranges of values and what %% == 0 etc is in syntax
+
+
+##QE2 -- bTake the original dataset with all the variables. Using across and where, summarise the number of missing values, first across all columns of type character, and then across all columns of type numeric.
+```{r}
+
+```
+
+

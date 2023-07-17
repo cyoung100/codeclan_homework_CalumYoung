@@ -1,0 +1,6 @@
+"0",""
+"0","bev_prep_avg %>%"
+"0","  mutate(all_drink_avg = mean(Calories)) %>% "
+"0","  select(all_drink_avg,Calories,Beverage_prep) %>% "
+"0","  filter(Calories > all_drink_avg) %>% "
+"0","  group_by(Beverage_prep)"

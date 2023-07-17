@@ -1,0 +1,3 @@
+"0",""
+"0","fraud_trans <- full_join(fraud_base, trans_base, ""transaction_id"") "
+"0",""

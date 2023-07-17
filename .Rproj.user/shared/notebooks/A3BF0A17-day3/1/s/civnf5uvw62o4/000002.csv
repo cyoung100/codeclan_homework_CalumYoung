@@ -1,0 +1,9 @@
+"0","```r
+charges_numeric<- total_charges_replaced %>% 
+  mutate(total_charges = as.numeric(total_charges))
+        
+charges_numeric %>% 
+  drop_na()
+
+
+```"

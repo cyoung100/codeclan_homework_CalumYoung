@@ -1,0 +1,51 @@
+"0","library(tidyverse)"
+"0","card_base  <- read_csv(""data/CardBase.csv"")"
+"2","[1mRows: [22m[34m500[39m [1mColumns: [22m[34m4[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (3): Card_Number, Card_Family, Cust_ID
+[32mdbl[39m (1): Credit_Limit"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","trans_base <- read_csv(""data/TransactionBase.csv"")"
+"2","[1mRows: [22m[34m10000[39m [1mColumns: [22m[34m5[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (4): Transaction_ID, Transaction_Date, Credit_Card_ID, Transaction_Segment
+[32mdbl[39m (1): Transaction_Value"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","fraud_base <- read_csv(""data/FraudBase.csv"")"
+"2","[1mRows: [22m[34m109[39m [1mColumns: [22m[34m2[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (1): Transaction_ID
+[32mdbl[39m (1): Fraud_Flag"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","cust_base  <-  read_csv(""data/CustomerBase.csv"")"
+"2","[1mRows: [22m[34m5674[39m [1mColumns: [22m[34m4[39m"
+"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────[39m
+[1mDelimiter:[22m "",""
+[31mchr[39m (3): Cust_ID, Customer_Segment, Customer_Vintage_Group
+[32mdbl[39m (1): Age"
+"2","
+[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
+[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","library(janitor)"
+"0",""
+"0","card_base <- card_base %>% "
+"0","  clean_names(""snake"")"
+"0",""
+"0","trans_base <- trans_base %>% "
+"0","  clean_names(""snake"")"
+"0",""
+"0","fraud_base <-  fraud_base %>% "
+"0","  clean_names(""snake"")"
+"0",""
+"0","cust_base <-  cust_base %>% "
+"0","  clean_names(""snake"")"
+"0",""

@@ -1,0 +1,246 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidyr)
+comms_data<- read.csv("telecom_data.csv")
+
+##are nas present, shows
+comms_data %>% 
+  filter(is.na(monthly_charges))
+
+##gives a count of nas in DF
+
+comms_data %>% 
+  summarise(count = sum(is.na(monthly_charges)))
+```
+
+
+##drop / remove nas
+```{r}
+
+comms_data %>% 
+  drop_na()
+
+```
+
+##Impute datas; i.e with median data - coalesce; identify postion and fill with median value
+```{r}
+comms_data_imputed_median <- comms_data %>% 
+  mutate(monthly_charges = coalesce(monthly_charges,median(monthly_charges, na.rm = TRUE)))
+
+comms_data_imputed_median
+```
+
+
+##########
+## Non standard missing values 
+```{r}
+
+comms_data %>% 
+  select(total_charges)
+
+```
+
+
+```{r}
+total_charges_replaced<- comms_data_imputed_median %>% 
+  mutate(total_charges = na_if(total_charges, "na")) %>% 
+  mutate(total_charges = na_if(total_charges, "N/A"))
+
+total_charges_replaced %>% 
+  filter(is.na(total_charges))
+
+```
+
+
+##change columncategory 
+```{r}
+charges_numeric<- total_charges_replaced %>% 
+  mutate(total_charges = as.numeric(total_charges))
+        
+charges_numeric %>% 
+  drop_na()
+
+
+```
+
+##pulls all different types of value in form
+```{r}
+
+comms_data %>% 
+  pull(total_charges) %>% 
+  unique()
+  
+
+```
+
+
+
+
+##Recoding 
+- learning objectices
+    what is recoding
+    know use of if-else, recode and case-when functions
+    understand the usage of these function
+
+```{r}
+library(tidyverse)
+library(CodeClanData)
+```
+
+##if else function
+```{r}
+##build column showing t/f meets criteria
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = ageyears > 12)
+
+##builds column with output depending on value in vector
+students_big %>% 
+  select(ageyears) %>% 
+  mutate(older_than_12 = if_else(ageyears > 12, "Older than 12", "12 or younger"))
+
+
+```
+
+##changes L / R tp left / right
+```{r}
+students_big %>% 
+select(handed) %>% 
+  mutate(handed = if_else(handed == "L", "Left", "Right"))
+
+```
+
+##if value is already what is wanted assign catergor name within the FALSE boolean
+```{r}
+students_big %>% 
+select(favourite_physical_activity) %>% 
+  mutate(favourite_physical_activity = if_else(favourite_physical_activity == "Football/Soccer", "Football",favourite_physical_activity))
+
+
+
+```
+
+
+##recode changes value
+```{r}
+grade<- c("A","B","C","D","E")
+
+recode(grade, "A" = "Exc", "B" = "Good", "C" = "Shit")
+
+```
+
+##changes value names
+```{r}
+students_big %>% 
+  select(travel_to_school) %>% 
+  mutate(travel_to_school=recode(travel_to_school,"Bus" = "bus", "Car" = "car", "Walk" = "walk"))
+```
+
+
+
+```{r}
+students_big %>% 
+  group_by(travel_to_school) %>% 
+  summarise(n = n())
+```
+
+```{r}
+students_big %>% 
+  select(travel_to_school) %>% 
+  mutate(travel_to_school=recode(travel_to_school,"Bus" = "bus", "Car" = "car", "Walk" = "walk",.default = "Other"))
+```
+
+
+
+```{r}
+data <- read.table(header = TRUE, text="
+ subject sex control cond1 cond2 compl
+       1   M     7.9  12.3  10.7  T
+       2   F     6.3  10.6  11.1  T
+       3   F     9.5  13.1  13.8  N
+       4   M    11.5  13.4  12.9  F
+")
+```
+
+```{r}
+data %>% 
+  mutate(subject = recode(subject, "1" = "001", "2"="002","3"="003","4"="004")) %>% 
+  mutate(sex = if_else(sex == "M","Male","Female")) %>% 
+  mutate(compl = recode(compl, "T" = T, "F" = F,.default = NA))
+
+
+
+data %>% 
+  mutate(categ = case_when(subject == 1 ~ "Child",
+  sex == "M" & compl == T ~ "Adult",
+  T ~ "unknown"))
+
+
+data %>% 
+  mutate(categ = case_when(subject == 1 ~ "Child",
+  sex == "M" & compl == T ~ "Adult",.default =  "unknown"))
+
+
+
+data %>% 
+  select(compl) %>% 
+  mutate(comp2 = case_when(compl == "T" ~ "TR",
+                           compl == "F" ~ "Fal",
+                           .default = NA)) %>% 
+  
+  
+  mutate(compl3 = case_match(compl,
+                             "T" ~ "TRUE",
+                             "F" ~ "False",
+                             .default = NA))
+?case_match
+
+```
+
+
+##case_when; complex transfomrations on vector or , condition determines assigned value
+## case_when(
+      condition1~value1,
+      condition2~value2,
+      condition3~value3,
+      .default~value_default)
+      
+
+```{r}
+ages<-c(10,25,40,80,90)
+
+
+
+cat = (case_when(
+  ages < 18 ~ "Child",
+  ages >= 18 & ages < 65 ~ "Adult",
+  ages > 65 ~ "Senior",
+  T ~ "unknown"))
+
+cat
+
+
+```
+##Which fucntion
+
+2 categor = if_else
+more than = case_when most general option
+
+
+###Extra dplyr
+
+##group_by with mutate
+
+```{r}
+new_coders <- read_csv("new_coders.csv")
+```
+
+
+
+
+
