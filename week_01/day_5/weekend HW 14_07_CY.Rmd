@@ -1,0 +1,243 @@
+---
+title: "Day 5 - Weekend Homework"
+output:
+  html_document:
+    df_print: paged
+---
+
+##Load data, brief investigation
+
+```{r}
+library(dplyr)
+library(tidyverse)
+
+
+
+books<- read.csv("books.csv")
+
+# dimensions of dataset
+ 
+#dim(books)
+
+# investigate columns
+#column name format is ideal
+
+#View(books)
+
+#assess missing values in dataset
+
+sum(is.na(books))
+# no NAs present
+
+
+```
+
+## Investigate pages
+  # average page count
+      # shortest books: difference from average
+      # longest books: difference from average
+      # identify authors who write the most both long / short books 
+      # group books depending on length; short, average, long
+      # average page count for each group size
+  
+```{r}
+
+# categorize books depending on page count
+
+#check page count ranges 
+
+books %>% 
+  summary()
+
+# changed books with zero pages to NAs as a books needs a page to be a book....
+books_pages <- books %>%
+                mutate(num_pages = na_if(num_pages, 0))
+
+sum(is.na(books_pages))
+ 
+# 76 books with no pages
+
+
+# NAs removed as looking only at rows where pages count included 
+books_pages %>% 
+  na.omit(num_pages)
+
+
+# short: < 192, average: 192 -  299, long: 336 - 416, very long: 416 - 1000, crazy long >1000  
+
+read_duration <- books_pages %>% 
+                           mutate(page_num_group = 
+                           case_when(num_pages > 1000 ~ "crazy long",
+                                     num_pages > 416  ~ "very long",
+                                     num_pages > 299  ~ "long",
+                                     num_pages > 192  ~ "average",
+                                     num_pages > 1    ~ "short",
+                                     num_pages > 0    ~ "pamphlet",
+                                    .default = NA_character_))
+
+# which size category is most popular 
+
+read_duration %>% 
+  count(page_num_group, sort = TRUE)
+
+# Long books were most abundant (2833), followed by average (2782), short (2698), and very long (2506). 
+# Interestingly there is only a 100 or so books between each of these categories. Books with over 1000
+# pages were considerably less abundant (217). 11 single page 'pamphlets' were found, and 76 books had 
+# unknown page counts. 
+```
+
+
+
+```{r}
+
+# find average page count per group, and insert as new column and compare difference from group mean both by group and also overall.
+
+pages_mean <- read_duration %>%
+  
+                na.omit(num_pages) %>% 
+  
+                mutate(page_length_avg = mean(num_pages),
+                       diff_from_overall_avg = num_pages - page_length_avg) %>% 
+                         group_by(page_num_group) %>%
+  
+                mutate(group_length_avg = mean(num_pages),
+                  diff_from_group_avg = num_pages - group_length_avg) %>% 
+                ungroup()
+   
+##shows top books with highest difference of pages from overall mean
+             
+pages_mean %>% 
+  slice_max(diff_from_overall_avg, n = 10) %>% 
+  arrange(desc(diff_from_overall_avg)) %>% 
+  select(title, num_pages, diff_from_overall_avg
+  )
+
+
+
+##Shows average length of each size category
+
+pages_mean %>% 
+  distinct(group_length_avg) %>% 
+  arrange(desc(group_length_avg))
+
+## ungroup as will keep using this dataset
+pages_mean %>% 
+  ungroup()
+
+
+```
+
+
+```{r}
+
+# Average page count: 338
+
+pages_mean %>% 
+  select(page_length_avg)
+
+
+```
+
+  
+  ## Investigate books highest from mean
+  
+```{r}
+
+top_5_diff_from_mean <-  pages_mean %>% 
+                      ungroup() %>% 
+                      slice_max(diff_from_overall_avg, n = 5) %>% 
+                      select(title,diff_from_overall_avg,num_pages,page_length_avg) %>% 
+                      arrange(desc(diff_from_overall_avg))
+
+top_5_diff_from_mean
+ 
+# The Complete Aubrey/Maturin Novels (5 Volumes) shows highest difference from mean, considered as 
+# artefact as 5 volumes, next in line The Second World War.
+
+
+```
+
+```{r}
+## Same as above but with shortest books, not very interesting as many rows with 1 page
+
+
+top_5_diff_from_mean_short <-  pages_mean %>% 
+                      ungroup() %>% 
+                      slice_min(diff_from_overall_avg, n = 5) %>% 
+                      select(title,diff_from_overall_avg,num_pages,page_length_avg) %>% 
+                      arrange(desc(diff_from_overall_avg))
+
+top_5_diff_from_mean_short
+```
+
+
+
+# identify authors who write  most / long / short books - only in english 
+
+```{r}
+## identify all english codes used
+ 
+books %>% 
+  distinct(language_code)
+
+author_english <-   pages_mean %>%
+                    filter(language_code %in% c("eng", "en_US", "en-GB", "en-CA" )) %>% 
+                    group_by(authors) %>% 
+                    count(page_num_group, sort = TRUE) %>% 
+                    ungroup() %>% 
+                    arrange(desc(n))
+
+
+## attempted to use starts_with as to filter only english written books, failed.
+## might return
+##       en <- pages_mean %>% 
+  ##          select(language_code = starts_with("en"))
+
+
+author_english
+
+## P.G Wodehouse has the greatest number of books in this list in printed in english
+
+  big_writer <- author_english %>% 
+              filter(page_num_group == "crazy long")
+
+big_writer
+
+## J.R.R Tolkein wrote the most crazy long books (5) (legend), followed by James. A Michener (4)
+## and James Clavell (3).
+
+small_but_many <- author_english %>% 
+                  filter(page_num_group == "short")
+
+small_but_many %>% 
+  arrange(-n)
+
+## Gordon Korman, Dr. Seuss and Roald Dahl / Quentn Blake wrote 17, 16, and 10 short
+## books, repsectively. 
+
+pamphlet_people <- author_english %>% 
+                  filter(page_num_group == "pamphlet")
+
+pamphlet_people 
+
+## Charles Stross/Shandra Marie/Jared Doreck wrote two pamphlets. Good for them.
+
+
+```
+##These were a few other things I intended on attempting but ran out of time, unfortunately.
+
+## Investigate publishers
+  # largest; most books published
+  # smallest: least
+  # most languages
+  # publishers which have ceased operations
+  # authors with multiple publishers
+
+  
+## Investigate books / authors
+  # global reach: most languages translated into
+  # most reviews / highest rating / lowest rating / (correlation?)
+  # most books published / fewest / difference from mean
+    # within country / global scale
+  # longest wait between publishings
+  
