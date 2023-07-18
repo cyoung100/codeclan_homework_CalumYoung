@@ -1,0 +1,192 @@
+---
+title: "HW 18_07"
+output: html_notebook
+---
+
+##Q1 Load the code_clan_tweets.csv data. Find the number of rows, columns, and list all the variable names.
+```{r}
+library(tidyverse)
+library(dplyr)
+library(stringr)
+
+tweet <- read_csv("data/code_clan_tweets.csv")
+
+dim(tweet)
+
+ls(tweet)
+
+
+```
+## 234 rows, 27 columns
+
+
+##Q2 Find the total number of favourites (stored in favorite_count) that CodeClan tweets have got. Don’t add a tweet’s favorite_count to the total when the tweet was quoted (see the is_quote variable).
+
+```{r}
+tweet %>% 
+  select(favorite_count,is_quote) %>% 
+  filter(is_quote == F) %>% 
+  summarise(sum(favorite_count))
+```
+##425
+
+
+##Q3 Summarise the mean number of retweets (retweet_count), split by the type of platform that was used to tweet (source). Again, omit quoted tweets from the mean.
+```{r}
+
+tweet%>% 
+  filter(is_quote == F) %>% 
+  group_by(source) %>% 
+  summarise(mean(retweet_count))
+
+  
+```
+
+##Q4 Count the total number of likes (i.e. total of favorite_count), split by media type, and arrange them from most likes to least. Assume that any tweets without a listed media type are of type “text”.
+
+```{r}
+
+
+tweet_media_adjusted <- tweet %>% 
+                  mutate(media_type = replace_na(media_type, "text")) %>% 
+                  group_by(media_type) %>% 
+                  summarise(sum(favorite_count))
+                
+
+tweet_media_adjusted
+
+```
+
+##Q5 Find the mean number of characters that a CodeClan tweet contains. You can either find a way to count the text in the text variable, or use the variable display_text_width which contains a count. Checking both would be a good idea if possible to see if they match (but it’s not essential).
+
+```{r}
+tweet %>% 
+  summarise(mean(display_text_width))
+#149 
+#doesnt include twitter handles
+
+
+tweet %>% 
+  mutate(letter_count = str_count(text, ".")) %>% 
+  summarise(mean(letter_count))
+#188
+#doesnt with twitter handles
+
+tweet %>% 
+  mutate(letter_count = str_length(text)) %>% 
+  summarise(mean(letter_count))
+#188
+
+
+
+##or 
+
+tweet %>% 
+  mutate(letter_count = str_length(text)) %>% 
+  summarise(mean(letter_count))
+
+tweet %>% 
+  select(display_text_width,text)
+
+
+tweet %>% 
+  summarise(sum(display_text_width))
+
+34964 / 234
+
+ls(tweet)
+
+```
+## values differ 148.42 and second line returns 188.37
+## 2nd line appears correct, not sure if spaces included in str_count??
+
+#Q6 The code_clan_info.csv data file contains status_url along with other info. Load this in, and join it to the code_clan_tweets tibble, so that you have a status_url for each tweet. Decide which variable to join the tibbles on.
+```{r}
+
+info <- read_csv("data/code_clan_info.csv")
+
+join_tweet <- tibble(full_join(tweet, info, "tweet_id"))
+
+```
+
+## full join keeps all data
+
+
+
+##Q7 %>% From your new joined data, create a new tibble codeclan_hashtags containing only tweet_id and hashtags, then convert hashtags into lowercase for analysis. Keep only those tweets with hashtags.
+
+```{r}
+
+codeclan_hashtags <- join_tweet %>% 
+    select(tweet_id, hashtags)
+
+codeclan_hashtags <- tibble(codeclan_hashtags) %>% 
+  na.omit(hashtags) %>% 
+  mutate(hashtags = str_to_lower(hashtags))
+
+```
+
+##Ext Q 8
+```{r}
+library(stringr)
+
+pattern <- "^c\\("
+
+hash <- codeclan_hashtags$hashtags
+# could not find hastags variable so made into vector, unsure if this 
+# is best way
+
+count <- str_detect(hash, pattern)
+
+str_extract(hash, pattern )
+
+count <-str_count(hash, pattern)
+sum(count)
+
+#or
+
+str_sub(hash, 1, 2 )
+
+
+
+```
+
+##Q9 Use the str_detect() function to find all tweets with text that mentions “Edinburgh”, and count how many such tweets there are.
+
+```{r}
+
+## used lower case as changed earlier
+str_detect(hash, "edinburgh")
+
+str_count(hash, "edinburgh")
+ed_count <- str_count(hash, "edinburgh")
+sum(ed_count)
+
+
+```
+
+# 8 edinburgh entries found
+
+
+
+#Q10 Use str_extract_all() with a regular expression to find out which Twitter users CodeClan have been tweeting.
+```{r}
+
+tweet_text <- join_tweet %>% 
+  select(text)
+
+handles <- tweet_text$text
+
+handle_hits <-str_extract_all(handles, "(?<!\\w)@[A-Za-z0-9_]+") %>% 
+  flatten_chr()
+
+unique(handle_hits)
+
+handle_sum <- tibble(handle_hits)
+
+handle_sum %>% 
+    count(handle_hits) %>% 
+    arrange(desc(n))
+  
+```
+
