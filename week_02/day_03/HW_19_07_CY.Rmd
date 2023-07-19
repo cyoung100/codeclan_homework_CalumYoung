@@ -1,0 +1,145 @@
+---
+title: "HW_19_07"
+output: html_notebook
+---
+
+#Q1 Find the weather forecast for the next three days online. Create a list of lists in which each inner list should be labelled with the name of the day of the week. Each inner list should contain named elements telling you the temperature, chance of rain and wind speed.
+
+
+##hopeful numbers, not accurate
+
+```{r}
+
+## datalist
+thurs <- list(
+  temp = 19,
+  rain_chance = 0.6,
+  wind_speed = 15)
+
+fri <- list(
+  temp = 16,
+  rain_chance = 1,
+  wind_speed = 15)
+
+sat <- list(
+  temp = 21,
+  rain_chance = 08,
+  wind_speed = 10)
+
+## list of lists
+forecast <- list(
+  thursday = thurs,
+  friday = fri,
+  saturday = sat
+)
+
+print(forecast)
+
+
+```
+
+
+## Q2 Using the list you’ve just made find:
+```{r}
+
+# i. The chance of rain tomorrow
+
+forecast[["thursday"]][2]
+
+# ii. The wind speed on the day after tomorrow
+
+forecast[["friday"]][3]
+
+# iii. The temperature tomorrow.
+
+forecast[[1]][1]
+
+```
+##Q3 Find a 14 day forecast online and create a matrix of the forecasts for temperature, where each week is one row and columns correspond to days.
+
+```{r}
+temp <- matrix(
+  c(
+    17, 16, 15, 17, 17, 17, 18,
+    10, 13, 15, 16, 17, 15, 12
+  ),
+  nrow = 2,  # number weeks
+  ncol = 7,  # number days
+  )
+
+temp
+
+```
+
+##Q4 From the matrix you just made select:
+
+```{r}
+#The third day of the second week
+
+temp[2,3]
+
+#The whole second week
+temp[2,c(1:7)]
+
+#The first, third and fifth days in both weeks
+temp[1:2,c(1,3,5)]
+
+```
+
+##Q5 Write a function that pre-appends “The answer is:” to any character input, 
+## while for numeric input, it either just returns the number for numbers less than 10, 
+## or divides the number by 10 for numbers greater than 10. 
+## For anything else return “Invalid input”.
+
+```{r}
+prefix <- function(input) {
+  if (is.character(input)) {
+    return(paste("The answer is:", input))
+  } else if (is.numeric(input)) {
+    return(ifelse(input < 10, input, input / 10))
+  } else {
+    return("Invalid Input ")
+  }
+}
+
+prefix("gabagool")
+prefix(21)
+prefix(8)
+
+```
+
+#Q6 Write a function which checks if two vectors have the same elements.
+
+If they have the same elements in the same order, return “Exactly the same”
+If they have the same elements but in a different order, return “The same”
+If they don’t have the same elements, return “Different”.
+
+```{r}
+check_vector_similarity <- function(v1, v2) {
+  if (identical(v1, v2)) {
+    return("Exactly the same")
+  } else if (all(sort(v1) == sort(v2))) {
+    return("The same")
+  } else {
+    return("Different")
+  }
+}
+
+##test 
+v1 <- c(1, 2, 3, 4)
+v2 <- c(1, 2, 3, 4)
+v3 <- c(4, 3, 2, 1)
+v4 <- c(1, 2, 3, 5)
+
+print(check_sim(v1,v2))
+
+print(check_sim(v1,v3))
+
+print(check_sim(v1,v4))
+
+##nut, couldnt get the order variation to work
+
+
+```
+
+#Q7 very tired. no ext today, apologies

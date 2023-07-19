@@ -123,6 +123,7 @@ codeclan_hashtags <- join_tweet %>%
 codeclan_hashtags <- tibble(codeclan_hashtags) %>% 
   na.omit(hashtags) %>% 
   mutate(hashtags = str_to_lower(hashtags))
+codeclan_hashtags
 
 ```
 
@@ -161,6 +162,8 @@ str_detect(hash, "edinburgh")
 str_count(hash, "edinburgh")
 ed_count <- str_count(hash, "edinburgh")
 sum(ed_count)
+
+hash
 
 
 ```
