@@ -115,15 +115,18 @@ If they have the same elements but in a different order, return “The same”
 If they don’t have the same elements, return “Different”.
 
 ```{r}
-check_vector_similarity <- function(v1, v2) {
-  if (identical(v1, v2)) {
+check_vector_sim <- function(v1, v2) {
+  if (all(v1 == v2)) {
     return("Exactly the same")
-  } else if (all(sort(v1) == sort(v2))) {
+  } 
+  
+  if (all(sort(v1) == sort(v2))) {
     return("The same")
-  } else {
+  } 
+  
     return("Different")
   }
-}
+
 
 ##test 
 v1 <- c(1, 2, 3, 4)
@@ -131,11 +134,11 @@ v2 <- c(1, 2, 3, 4)
 v3 <- c(4, 3, 2, 1)
 v4 <- c(1, 2, 3, 5)
 
-print(check_sim(v1,v2))
+print(check_vector_sim(v1,v2))
 
-print(check_sim(v1,v3))
+print(check_vector_sim(v1,v3))
 
-print(check_sim(v1,v4))
+print(check_vector_sim(v1,v4))
 
 ##nut, couldnt get the order variation to work
 
