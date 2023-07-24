@@ -146,3 +146,8 @@ print(check_vector_sim(v1,v4))
 ```
 
 #Q7 very tired. no ext today, apologies
+
+```{r}
+
+```
+
