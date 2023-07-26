@@ -125,13 +125,18 @@ GROUP BY t.id HAVING count(e.id)* CAST(t.charge_cost AS NUMERIC ) > 5000 ;
 
 -- Question 5.
 -- How many of the employees serve on one or more committees? - 2
-
+-- on 2 committees
 SELECT e.id, count(e.id) AS occurence 
 FROM employees_committees AS ec 
 INNER JOIN employees AS e
 ON e.id = ec.employee_id
 GROUP BY e.id
 HAVING count(e.id) > 1  
+
+-- 1 or more committees
+SELECT 
+	count (DISTINCT(employee_id)) AS num_employees_on_committee
+FROM employees_committees
 
 
 -- Question 6.
@@ -142,9 +147,6 @@ FROM employees AS e
 LEFT JOIN employees_committees AS ec
 ON e.id = ec.employee_id 
 WHERE ec.committee_id IS NULL 
-
-
-
 
 
 
