@@ -1,0 +1,162 @@
+---
+title: "HW_22_08"
+output: html_notebook
+editor_options: 
+  chunk_output_type: console
+---
+
+1.
+```{r}
+library(tidyverse)
+library(CodeClanData)
+
+backpack
+
+head(backpack)
+names(backpack)
+```
+
+2. What is the distribution of backpack weights that students are carrying? 
+```{r}
+backpack %>% 
+  ggplot(aes(x = backpack_weight)) +
+  geom_histogram(fill = "skyblue", color = "black") +
+  labs(title = "Histogram Example",
+       x = "Backpack weights ",
+       y = "Frequency")
+
+shapiro.test(backpack$backpack_weight)
+
+backpack %>% 
+  summarise(mean(backpack_weight))
+
+
+```
+Hist plot shows majority of backpack weights arounf 5 - 12 (kg?). One kid has super heavy bag around 35kg. The distribution of backpack weights is non-normal. Average bag weight is 11.66kg
+
+3. Are there differences in backpack weight between sex?
+```{r}
+backpack %>% 
+  ggplot(aes(x = sex, y = backpack_weight, fill = sex)) +
+  geom_boxplot() +
+  labs(title = "Backpack weight between genders",
+       x = "",
+       y = "Backpack weight")
+```
+Average backpack weight between genders is very similar, male bags are just marginally heavier on average. Males also have a greater spread in backpack weights largely due to the one extreme outlier with a 35kg bag. 
+
+4. What is the relationship between body weight and backpack weight?
+```{r}
+
+backpack %>% 
+  ggplot(aes(x = body_weight, y = backpack_weight)) +
+  geom_point() +
+  labs(title = "Backpack weight between genders",
+       x = "Body weight",
+       y = "Backpack weight") +
+  geom_smooth(method = "lm")
+
+
+
+shapiro.test(backpack$body_weight)
+shapiro.test(backpack$backpack_weight)
+#data non normal so using spearman 
+
+ 
+  cor.test(backpack$body_weight, backpack$backpack_weight, method = "spearman")
+
+```
+
+Very slight correlation between body weight and backpack weight (Cor.coeff = 0.21 (p < 0.05)). Minor trend of greater body weights have heavier backpacks. 
+
+5.
+```{r}
+backpack %>% 
+  ggplot(aes(x = body_weight, y = backpack_weight, color = sex)) +
+  geom_point() +
+  labs(title = "Backpack weight between genders",
+       x = "Body weight",
+       y = "Backpack weight") +
+  facet_wrap(~ sex)
+
+
+```
+
+Females have lower body weights but have bags similiar in weight to males.Individual with heaviest bag is male, overall scatter does not indicate influence of gender. 
+
+6.What proportion of students report back pain?
+```{r}
+names(backpack)
+backpack_pain <- backpack %>% 
+  mutate(back_status = ifelse(back_problems == 1, "yes", "no"))
+
+backpack_pain %>% 
+ggplot(aes(x = 1, fill = back_status)) +
+  geom_bar(position = "stack") +
+  labs(x = NULL,
+       y = "% Pain",
+       fill = "Back pain reported") +
+    theme(legend.position = "right",
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank()) 
+
+```
+Majority of students don't report back pains, over a quarter do.
+
+7.
+```{r}
+  names(backpack)
+
+backpack_pain %>%
+  ggplot(aes(x = sex, fill = back_status, label = stat(count))) +
+  geom_bar(position = "stack") +
+  labs(x = "Sex",
+       y = "Count",
+       fill = "Pain Status") +
+  theme_minimal() +
+  theme(legend.position = "right")
+```
+More girls than boys in study pool. Females had more reports of bakpain than males by almost double. 
+
+8. Females show higher prevalence of backpain than males. 
+```{r}
+
+ggplot(backpack_pain) + 
+  aes(x = body_weight, y = backpack_weight, color = back_status) + 
+  geom_point() + 
+  facet_grid(sex ~ back_status) + 
+  labs(x = "Body Weight", 
+       y = "Backpack Weight",
+       color = "Reported back pain")+
+  theme(legend.position = "right") +
+  geom_smooth(method = "lm", se = F)
+
+
+```
+
+Ex 1.
+```{r}
+b_count <- backpack_pain %>% 
+  group_by(year, back_status) %>% 
+  summarise(count = n()) %>% 
+    filter(year != "0")
+  ungroup()
+
+
+b_count %>% 
+  filter(back_status != "no") %>% 
+  ggplot(aes(x = year, y = count, fill = back_status)) +
+  geom_bar(stat = "identity",position = "dodge") +
+  labs(
+    x = "Year",
+    y = "Back pain report"
+  ) +
+  theme(legend.position ="none")
+```
+Back pain reports peak in year 3 and decrease thereafter, reports are lowest in early years. 
+
+
+```{r}
+ggplot(backpack, aes(x = year, y = backpack_weight)) +
+  geom_col()
+```

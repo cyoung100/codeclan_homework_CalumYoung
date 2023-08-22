@@ -35,6 +35,9 @@ qb_monthly_sales %>%
   labs(y = "Sales (£)\n",
        x = "\nMonth")
 
+
+?geom_smooth
+
 ```
 
 Q3
