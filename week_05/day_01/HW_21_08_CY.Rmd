@@ -1,0 +1,175 @@
+---
+title: "ggplot homework"
+output: html_notebook
+---
+
+
+
+```{r}
+library(CodeClanData)
+library(tidyverse)
+qb_monthly_sales
+qb_device_data
+qb_competitors
+qb_revenue_breakdown
+
+```
+
+Q1
+```{r}
+qb_revenue_breakdown %>% 
+  ggplot(aes(y = Revenue, x = Year, fill = Product)) +
+  geom_col()
+  
+```
+
+Q2
+```{r}
+
+qb_monthly_sales %>% 
+  filter(Cashflow == "Kwikbit Unit 1 Sales") %>% 
+  ggplot(aes(x = Date, y = Amount)) +
+           geom_line() +
+  geom_point()+
+  geom_smooth(method = "lm")+
+  labs(y = "Sales (£)\n",
+       x = "\nMonth")
+
+```
+
+Q3
+```{r}
+qb_monthly_sales %>% 
+  filter(Cashflow != "Kwikbit Unit 1 Sales") %>% 
+  ggplot(aes(x = Date, y = Amount, color = Cashflow)) +
+           geom_line() +
+  geom_point()+
+  labs(y = "Amount\n",
+       x = "\nMonth")
+```
+
+Q4
+```{r}
+qb_competitors %>% 
+  ggplot(aes(x = Year, y = Revenue, fill = Company)) +
+  geom_area()+
+  scale_y_continuous(labels = scales::label_number())+
+  ylab("Revenue\n")
+```
+Q5
+```{r}
+
+qb_competitors %>% 
+  ggplot() +
+  aes(x = Year, y = Revenue, colour = Company) +
+  geom_line() +
+  geom_point() +
+  ylab("Revenue\n")
+```
+
+Q6
+```{r}
+qb_device_data %>% 
+    mutate(qb_device_data, decimal_hour = hours + (mins / 60)) %>%
+  ggplot() +
+  aes(x = decimal_hour, y = counts) +
+  geom_line() + 
+  facet_grid(id ~ device)+
+  xlab("Decimal Hour")
+```
+
+Part 2 
+```{r}
+col_scheme <- c("#E89FE9", "#50434F", "#B6A7B5", "#F9A472", "#BD7040")
+
+qb_theme <-  theme(
+    text = element_text(size = 12),
+    title = element_text(size = 12.5),
+    axis.text = element_text(size = 10),
+    panel.background = element_rect(fill = "white"),
+    panel.grid = element_line(colour = "#f0f0f0")
+  )
+```
+
+```{r}
+qb_revenue_breakdown %>% 
+  ggplot(aes(y = Revenue, x = Year, fill = Product)) +
+  geom_col() +
+  qb_theme +
+  scale_fill_manual(values = col_scheme) +
+  ggtitle("Kwikbit Unit 1 sales", 
+          subtitle = "2018 / 2019")
+  
+```
+
+```{r}
+qb_monthly_sales %>% 
+  filter(Cashflow == "Kwikbit Unit 1 Sales") %>% 
+  ggplot(aes(x = Date, y = Amount)) +
+           geom_line(colour = col_scheme[1]) +
+  geom_point(colour = col_scheme[1]) +
+  labs(y = "Sales (£)\n",
+       x = "\nMonth") +
+  qb_theme  +
+  ggtitle("Kwikbit Unit 1 sales", 
+          subtitle = "2018 / 2019")
+  
+```
+```{r}
+qb_monthly_sales %>% 
+  filter(Cashflow != "Kwikbit Unit 1 Sales") %>% 
+  ggplot(aes(x = Date, y = Amount, color = Cashflow)) +
+           geom_line() +
+  labs(y = "Sales (£)\n",
+       x = "") +
+  qb_theme +
+  ggtitle("Kwikbit Revenue / Cost", 
+          subtitle = "2018 / 2019") +
+  scale_colour_manual(values = col_scheme)
+  
+  
+```
+
+```{r}
+qb_competitors %>% 
+  ggplot(aes(x = Year, y = Revenue, fill = Company)) +
+  geom_area()+
+  scale_y_continuous(labels = scales::label_number())+
+  ylab("Revenue ($)\n") +
+  qb_theme +
+  scale_fill_manual(values = col_scheme) +
+   ggtitle(
+    "Fitness Tracker Revenue Competitors",
+    subtitle = "2015 / 2019")
+  
+```
+
+```{r}
+qb_competitors %>% 
+  ggplot() +
+  aes(x = Year, y = Revenue, colour = Company) +
+  geom_line() +
+  geom_point() +
+  ylab("Revenue ($)\n") +
+  qb_theme +
+  scale_color_manual(values = col_scheme) +
+    ggtitle(
+    "Fitness Tracker Revenue Competitors",
+    subtitle = "2015 / 2019"
+  )
+```
+
+```{r}
+qb_device_data %>% 
+  mutate(qb_device_data, decimal_hour = hours + (mins / 60)) %>%
+  ggplot() +
+  aes(x = decimal_hour, y = counts, colour = device) +
+  geom_line(show.legend = F) + 
+  facet_grid(id ~ device) +
+  scale_colour_manual(values = col_scheme) +
+  xlab("Time (hr)") +
+  ylab("Steps") +
+  qb_theme +
+  ggtitle("KwikBit Unit1 Vs Competitors")
+```
+
