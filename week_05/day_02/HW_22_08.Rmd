@@ -144,19 +144,32 @@ b_count <- backpack_pain %>%
 
 
 b_count %>% 
-  filter(back_status != "no") %>% 
   ggplot(aes(x = year, y = count, fill = back_status)) +
-  geom_bar(stat = "identity",position = "dodge") +
+  geom_bar(stat = "identity",position = "dodge", width = 0.6) +
   labs(
     x = "Year",
-    y = "Back pain report"
+    y = "Back pain report",
+    fill = "Reported back pain"
   ) +
-  theme(legend.position ="none")
+  theme(legend.position ="right")
 ```
 Back pain reports peak in year 3 and decrease thereafter, reports are lowest in early years. 
 
 
 ```{r}
-ggplot(backpack, aes(x = year, y = backpack_weight)) +
-  geom_col()
+
+
+sample_sizes <- backpack %>%
+  group_by(year) %>%
+  summarise(sample_size = n()) %>%
+  ungroup()
+
+backpack %>% 
+  filter(year != 0) %>% 
+  ggplot(aes(x = backpack_weight)) +
+  geom_bar() +
+  labs(
+    x = "Year"
+  ) +
+  facet_wrap(~ year)
 ```
