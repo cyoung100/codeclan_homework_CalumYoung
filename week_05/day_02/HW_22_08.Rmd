@@ -155,7 +155,7 @@ b_count %>%
 ```
 Back pain reports peak in year 3 and decrease thereafter, reports are lowest in early years. 
 
-
+Ex. 2
 ```{r}
 
 
@@ -173,3 +173,5 @@ backpack %>%
   ) +
   facet_wrap(~ year)
 ```
+
+More females than males reported back pain, females show slight positive correlation between body weight and back pack weight. This trend was also seen in those who didn't report back pain. In contrast, males who did report back pain showed a decreasing backpack weight with increasing body weight however the sample size in this group is minimal (6) so no real conclusions can be made. 
