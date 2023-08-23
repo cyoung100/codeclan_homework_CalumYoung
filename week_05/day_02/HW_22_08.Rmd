@@ -21,8 +21,7 @@ names(backpack)
 backpack %>% 
   ggplot(aes(x = backpack_weight)) +
   geom_histogram(fill = "skyblue", color = "black") +
-  labs(title = "Histogram Example",
-       x = "Backpack weights ",
+  labs(x = "Backpack weights ",
        y = "Frequency")
 
 shapiro.test(backpack$backpack_weight)
