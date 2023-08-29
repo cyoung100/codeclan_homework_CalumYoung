@@ -46,7 +46,7 @@ server <- function(input, output) {
     
     p <- ggplot(var1_counts, aes(x = .data[[input$variable1]], y = n)) +
       geom_bar(stat = "identity", fill = "steelblue") +
-      labs(x = input$variable1, y = "Count", title = "Variable Counts and Values") +
+      labs(x = input$variable1, y = "Count", title = "Attacks by variable") +
       coord_flip() +
       theme_minimal()
     
