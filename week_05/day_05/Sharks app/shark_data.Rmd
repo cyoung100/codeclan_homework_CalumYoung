@@ -1,0 +1,22 @@
+---
+title: "Shark Attack App"
+output: html_notebook
+---
+dataset source :https://public.opendatasoft.com/explore/dataset/global-shark-attack/
+```{r}
+library(tidyverse)
+library(ggplot2)
+library(ggmap)
+shark <- read.csv("global-shark-attack.csv", sep = ";")
+shark  <-  shark %>% 
+  mutate(year = as.integer(Year),
+         date = as.Date(Date))
+
+shark <- na.omit(shark)
+
+shark <- shark %>% 
+  select(-(15:21)) %>% 
+  head(500)
+
+```
+
