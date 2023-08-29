@@ -1,0 +1,100 @@
+---
+title: "HW_29_08"
+output: html_notebook
+---
+
+```{r}
+library(tidyverse)
+brand <-  janitor::clean_names(read_csv("data/20190928-items.csv"))
+glimpse(brand)
+head(brand)
+```
+Q2. Most phones per brand - Samsung (397)
+
+```{r}
+brand %>% 
+  group_by(brand) %>% 
+  summarise(num_handsets = n()) %>% 
+  slice_max(num_handsets)
+```
+Q3.
+```{r}
+
+
+samsung <- brand %>% 
+  filter(brand == "Samsung") %>% 
+  select(rating)
+  
+s_stats <- samsung %>% 
+  summarise(count = n(),
+            mean = mean(rating),
+            sd = sd(rating))
+
+shapiro_result <- shapiro.test(samsung$rating)
+            
+
+ggplot(samsung, aes(x = rating)) +
+  geom_histogram(aes(y = after_stat(density)),
+                 color = "white", fill = "lightblue") +
+  stat_function(
+    fun = dnorm,
+    args = list(mean = s_stats$mean, sd = s_stats$sd),
+    color = "red", size = 1
+  ) +
+  labs(x = "Rating", y = "Frequency",
+       caption = paste("Shapiro-Wilk test = ", format.pval(shapiro_result$p.value), "<0.05 so non-normal distribution assumed")) +
+  theme_minimal()
+
+
+?stat_function
+
+shapiro_result
+
+
+
+
+```
+
+Q4 empirical rule = 68% of data is within one sd, here 79% is within range so distribution is narrow and peaked: high kurtosis. Adding additonal sd increases normality, particularly 3 sd which was 97% and the rule is 99.7%
+```{r}
+prop_1sd <- samsung %>% 
+  filter(rating >= s_stats$mean - s_stats$sd) %>% 
+  filter(rating <= s_stats$mean + s_stats$sd) %>% 
+  summarise(p_1sd = n() / nrow(samsung))
+
+prop_1sd
+
+prop_2sd <- samsung %>% 
+  filter(rating >= s_stats$mean - 2 *s_stats$sd) %>% 
+  filter(rating <= s_stats$mean + 2 * s_stats$sd) %>% 
+  summarise(p_1sd = n() / nrow(samsung))
+prop_2sd
+
+prop_3sd <- samsung %>% 
+  filter(rating >= s_stats$mean - 3 * s_stats$sd) %>% 
+  filter(rating <= s_stats$mean + 3 * s_stats$sd) %>% 
+  summarise(p_1sd = n() / nrow(samsung))
+prop_3sd
+
+
+```
+Ex
+```{r}
+qqnorm(samsung$rating)
+qqline(samsung$rating)
+```
+Outliers/skewed tales show normality should not be assumed
+
+
+Following transformations didnt really help much
+```{r}
+qqnorm(log(samsung$rating))
+qqline(log(samsung$rating))
+```
+
+
+
+```{r}
+qqnorm(sqrt(samsung$rating))
+qqline(sqrt(samsung$rating))
+```

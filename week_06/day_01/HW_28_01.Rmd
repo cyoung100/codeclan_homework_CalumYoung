@@ -1,0 +1,102 @@
+---
+title: "Probability HW_28_01"
+output: html_notebook
+---
+```{r}
+library(tidyverse)
+source('prob.R')
+```
+
+
+
+Q1 
+```{r}
+library(prob)
+library(tidyverse)
+library(gtools)
+
+install.packages("prob")
+```
+```{r}
+titanic <- read_csv("data/titanic.csv")
+```
+
+```{r}
+# new col with combined crew as one value
+
+titanic <- titanic %>% 
+  mutate(crew_combined = class %in% c(
+    "engineering crew",
+    "restaurant staff",
+    "victualling crew",
+    "deck crew"
+  ))
+
+```
+
+```{r}
+tit_probs <- titanic %>% 
+  group_by(crew_combined) %>% 
+  summarise(prob = sum(survived == "yes")/n())
+
+```
+Probability of passenger survival
+```{r}
+tit_probs %>% 
+  filter(crew_combined == F)
+```
+Probability of crew survival
+```{r}
+tit_probs %>% 
+  filter(crew_combined == T)
+```
+chance of passengers surviving vs crew = 1.599
+```{r}
+ 0.379 / 0.237 
+```
+MVP1.2 Q1
+```{r}
+one_roll <- rolldie(1)
+
+roll_5_or_less <- one_roll %>%
+  filter(X1 < 5)
+
+roll_5_or_less
+
+prob <- nrow(roll_less_5) /
+  nrow(one_roll)
+
+
+prob
+```
+
+q2
+```{r}
+three_die_roll <- nrow(rolldie(3))
+three_die_roll
+```
+q3
+```{r}
+
+fourrolls <- rolldie(4)
+
+
+fourrolls <- fourrolls %>% 
+  mutate(total = rowSums(.))
+
+outcome_567 <- fourrolls %>% 
+  filter(total %in% c(5,6,7))
+
+nrow(outcome_567)
+```
+q4 
+```{r}
+
+outcomes <- factorial(5)
+
+
+1/outcomes
+
+
+```
+
