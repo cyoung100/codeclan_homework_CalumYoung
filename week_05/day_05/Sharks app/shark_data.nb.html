@@ -1755,27 +1755,13 @@ display: none;
 <p>dataset source :<a href="https://public.opendatasoft.com/explore/dataset/global-shark-attack/" class="uri">https://public.opendatasoft.com/explore/dataset/global-shark-attack/</a></p>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5saWJyYXJ5KGdncGxvdDIpXG5saWJyYXJ5KGdnbWFwKVxuYGBgIn0= -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeSh0aWR5dmVyc2UpXG5saWJyYXJ5KGdncGxvdDIpXG5saWJyYXJ5KGdnbWFwKVxuc2hhcmsgPC0gcmVhZC5jc3YoXCJnbG9iYWwtc2hhcmstYXR0YWNrLmNzdlwiLCBzZXAgPSBcIjtcIilcbnNoYXJrICA8LSAgc2hhcmsgJT4lIFxuICBtdXRhdGUoWWVhciA9IGFzLmludGVnZXIoWWVhciksXG4gICAgICAgICBkYXRlID0gYXMuRGF0ZShEYXRlKSlcblxuc2hhcmsgPC0gbmEub21pdChzaGFyaylcblxuc2hhcmsgPC0gc2hhcmsgJT4lIFxuICBzZWxlY3QoLSgxNToyMSkpICU+JSBcbiAgaGVhZCg1MDApXG5cbnNoYXJrIDwtIHNoYXJrICU+JSBcbiAgbXV0YXRlKEZhdGFsLi5ZLk4uID0gYXMuZmFjdG9yKEZhdGFsLi5ZLk4uKSlcblxuXG5gYGAifQ== -->
 <pre class="r"><code>library(tidyverse)
 library(ggplot2)
-library(ggmap)</code></pre>
-<!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiV2FybmluZzogcGFja2FnZSDigJhnZ21hcOKAmSB3YXMgYnVpbHQgdW5kZXIgUiB2ZXJzaW9uIDQuMy4xVGhlIGxlZ2FjeSBwYWNrYWdlcyBtYXB0b29scywgcmdkYWwsIGFuZCByZ2VvcywgdW5kZXJwaW5uaW5nIHRoZSBzcCBwYWNrYWdlLFxud2hpY2ggd2FzIGp1c3QgbG9hZGVkLCB3aWxsIHJldGlyZSBpbiBPY3RvYmVyIDIwMjMuXG5QbGVhc2UgcmVmZXIgdG8gUi1zcGF0aWFsIGV2b2x1dGlvbiByZXBvcnRzIGZvciBkZXRhaWxzLCBlc3BlY2lhbGx5XG5odHRwczovL3Itc3BhdGlhbC5vcmcvci8yMDIzLzA1LzE1L2V2b2x1dGlvbjQuaHRtbC5cbkl0IG1heSBiZSBkZXNpcmFibGUgdG8gbWFrZSB0aGUgc2YgcGFja2FnZSBhdmFpbGFibGU7XG5wYWNrYWdlIG1haW50YWluZXJzIHNob3VsZCBjb25zaWRlciBhZGRpbmcgc2YgdG8gU3VnZ2VzdHM6LlxuVGhlIHNwIHBhY2thZ2UgaXMgbm93IHJ1bm5pbmcgdW5kZXIgZXZvbHV0aW9uIHN0YXR1cyAyXG4gICAgIChzdGF0dXMgMiB1c2VzIHRoZSBzZiBwYWNrYWdlIGluIHBsYWNlIG9mIHJnZGFsKVxu4oS5IEdvb2dsZSdzIFRlcm1zIG9mIFNlcnZpY2U6IFx1MDAxYl04OztodHRwczovL21hcHNwbGF0Zm9ybS5nb29nbGUuY29tXHUwMDA3PGh0dHBzOi8vbWFwc3BsYXRmb3JtLmdvb2dsZS5jb20+XHUwMDFiXTg7O1x1MDAwN1xu4oS5IFBsZWFzZSBjaXRlIGdnbWFwIGlmIHlvdSB1c2UgaXQhIFVzZSBgY2l0YXRpb24oXCJnZ21hcFwiKWAgZm9yIGRldGFpbHMuXG4ifQ== -->
-<pre><code>Warning: package ‘ggmap’ was built under R version 4.3.1The legacy packages maptools, rgdal, and rgeos, underpinning the sp package,
-which was just loaded, will retire in October 2023.
-Please refer to R-spatial evolution reports for details, especially
-https://r-spatial.org/r/2023/05/15/evolution4.html.
-It may be desirable to make the sf package available;
-package maintainers should consider adding sf to Suggests:.
-The sp package is now running under evolution status 2
-     (status 2 uses the sf package in place of rgdal)
-ℹ Google&#39;s Terms of Service: ]8;;https://mapsplatform.google.com&lt;https://mapsplatform.google.com&gt;]8;;
-ℹ Please cite ggmap if you use it! Use `citation(&quot;ggmap&quot;)` for details.</code></pre>
-<!-- rnb-output-end -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2hhcmsgPC0gcmVhZC5jc3YoXCJnbG9iYWwtc2hhcmstYXR0YWNrLmNzdlwiLCBzZXAgPSBcIjtcIilcbnNoYXJrICA8LSAgc2hhcmsgJT4lIFxuICBtdXRhdGUoeWVhciA9IGFzLmludGVnZXIoWWVhciksXG4gICAgICAgICBkYXRlID0gYXMuRGF0ZShEYXRlKSlcblxuc2hhcmsgPC0gbmEub21pdChzaGFyaylcblxuc2hhcmsgPC0gc2hhcmsgJT4lIFxuICBzZWxlY3QoLSgxNToyMSkpICU+JSBcbiAgaGVhZCg1MDApXG5cbmBgYCJ9 -->
-<pre class="r"><code>shark &lt;- read.csv(&quot;global-shark-attack.csv&quot;, sep = &quot;;&quot;)
+library(ggmap)
+shark &lt;- read.csv(&quot;global-shark-attack.csv&quot;, sep = &quot;;&quot;)
 shark  &lt;-  shark %&gt;% 
-  mutate(year = as.integer(Year),
+  mutate(Year = as.integer(Year),
          date = as.Date(Date))
 
 shark &lt;- na.omit(shark)
@@ -1783,13 +1769,16 @@ shark &lt;- na.omit(shark)
 shark &lt;- shark %&gt;% 
   select(-(15:21)) %&gt;% 
   head(500)
+
+shark &lt;- shark %&gt;% 
+  mutate(Fatal..Y.N. = as.factor(Fatal..Y.N.))
 </code></pre>
 <!-- rnb-source-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlNoYXJrIEF0dGFjayBBcHAiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KZGF0YXNldCBzb3VyY2UgOmh0dHBzOi8vcHVibGljLm9wZW5kYXRhc29mdC5jb20vZXhwbG9yZS9kYXRhc2V0L2dsb2JhbC1zaGFyay1hdHRhY2svDQpgYGB7cn0NCmxpYnJhcnkodGlkeXZlcnNlKQ0KbGlicmFyeShnZ3Bsb3QyKQ0KbGlicmFyeShnZ21hcCkNCnNoYXJrIDwtIHJlYWQuY3N2KCJnbG9iYWwtc2hhcmstYXR0YWNrLmNzdiIsIHNlcCA9ICI7IikNCnNoYXJrICA8LSAgc2hhcmsgJT4lIA0KICBtdXRhdGUoeWVhciA9IGFzLmludGVnZXIoWWVhciksDQogICAgICAgICBkYXRlID0gYXMuRGF0ZShEYXRlKSkNCg0Kc2hhcmsgPC0gbmEub21pdChzaGFyaykNCg0Kc2hhcmsgPC0gc2hhcmsgJT4lIA0KICBzZWxlY3QoLSgxNToyMSkpICU+JSANCiAgaGVhZCg1MDApDQoNCmBgYA0KDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlNoYXJrIEF0dGFjayBBcHAiDQpvdXRwdXQ6IGh0bWxfbm90ZWJvb2sNCi0tLQ0KZGF0YXNldCBzb3VyY2UgOmh0dHBzOi8vcHVibGljLm9wZW5kYXRhc29mdC5jb20vZXhwbG9yZS9kYXRhc2V0L2dsb2JhbC1zaGFyay1hdHRhY2svDQpgYGB7cn0NCmxpYnJhcnkodGlkeXZlcnNlKQ0KbGlicmFyeShnZ3Bsb3QyKQ0KbGlicmFyeShnZ21hcCkNCnNoYXJrIDwtIHJlYWQuY3N2KCJnbG9iYWwtc2hhcmstYXR0YWNrLmNzdiIsIHNlcCA9ICI7IikNCnNoYXJrICA8LSAgc2hhcmsgJT4lIA0KICBtdXRhdGUoWWVhciA9IGFzLmludGVnZXIoWWVhciksDQogICAgICAgICBkYXRlID0gYXMuRGF0ZShEYXRlKSkNCg0Kc2hhcmsgPC0gbmEub21pdChzaGFyaykNCg0Kc2hhcmsgPC0gc2hhcmsgJT4lIA0KICBzZWxlY3QoLSgxNToyMSkpICU+JSANCiAgaGVhZCg1MDApDQoNCnNoYXJrIDwtIHNoYXJrICU+JSANCiAgbXV0YXRlKEZhdGFsLi5ZLk4uID0gYXMuZmFjdG9yKEZhdGFsLi5ZLk4uKSkNCg0KDQpgYGANCg0K</div>
 
 
 
