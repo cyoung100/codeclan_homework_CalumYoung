@@ -1,0 +1,209 @@
+Hypothesis tests & probability - homework
+
+Question 1.
+Explore the dataset and familiarise yourself with it.
+```{r}
+library(tidyverse)
+library(infer)
+sleep <- msleep
+glimpse(sleep)
+head(sleep)
+
+```
+Question 2.
+Jabberwockies sleep for around 7 hours a night, on average. Perform an appropriate statistical test to determine whether the mean sleep_total in the sampled population of animal types differs from the typical value for jabberwockies.
+
+
+> does the sleep_total of jabberwockies significantly differ from the 
+sample pop (7 hours)?
+
+> H0: no difference in sleep pattern
+> H1: the sleep patterns differ
+
+- carrying out two tailed test with P alpha = (<0.05)
+
+```{r}
+#calculate observed stat i.e. the mean sleep of the population
+
+sleep_observed_stat <- sleep %>% 
+  summarise(mean_sleep = mean(sleep_total))
+
+sleep_observed_stat
+```
+
+```{r}
+# assess null distribution - testing means which is a point value
+
+sleep_null_dist <- sleep %>% 
+  specify(response = sleep_total) %>%
+  hypothesise(null = "point", mu = 7) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = 'mean')
+```
+
+```{r}
+
+
+sleep_null_dist %>% 
+  visualise(bins = 30) +
+  shade_p_value(obs_stat = sleep_observed_stat, direction = "both") # compares
+# null mean (7), with observed stat
+```
+Red line - e.g. observed stat very far from examined value
+
+Assess significance of difference
+
+```{r}
+jaber_p_test <-  sleep_null_dist %>% 
+  get_p_value(obs_stat = sleep_observed_stat, direction = "both")
+
+jaber_p_test
+```
+
+> P value is 0 - we have strong evidence to reject the H0 and state that jaberwockie sleep patterns significantly differ from the sampled animal population.
+
+
+Question 3.
+Perform an appropriate statistical test to determine whether omnivores sleep for significantly longer than herbivores, on average.
+
+> H0: Omnivores and Herbivores do not differ in sleep duration
+> H1: Omnivores sleep significantly longer than Herbivores - on average
+
+Q is stating longer - hence one sided, so going for one-tailed 
+
+
+```{r}
+sleep_diet_type <- sleep %>% 
+  filter(vore == c("omni", "herbi")) %>% 
+  group_by(vore)
+```
+visualise diference 
+
+```{r}
+sleep_diet_type %>% 
+  ggplot(aes(y = sleep_total, x = vore)) +
+  geom_boxplot()
+```
+Although herbivore has high variability in sleep pattern, means appears higher so indicative that they sleep longer than omnivores, on average.
+
+
+```{r}
+diet_null_distribution <- sleep_diet_type %>% 
+  specify(sleep_total ~ vore) %>% 
+  hypothesise(null = "independence") %>% # null is there is no relationship
+  generate(reps = 10000, type = "permute") %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
+```
+
+```{r}
+observed_stat_diet <- sleep_diet_type %>% 
+  specify(sleep_total ~ vore) %>% 
+  calculate(stat = "diff in means", order = c("omni", "herbi"))
+
+observed_stat_diet
+```
+
+Difference in mean sleep pattern between omnivores and herbivores is -0.8957983. Now testing if this is significantly different from 0 difference.
+
+Sticking with right/one tailed as Q asked if omni is greater than herbi sleep - not is there a difference either side of mean.
+
+```{r}
+diet_null_distribution %>% 
+  visualise() +
+  shade_p_value(obs_stat = observed_stat_diet, direction = "right")
+```
+```{r}
+diet_null_distribution %>% 
+  get_p_value(obs_stat = observed_stat_diet, direction = "right")
+```
+> P value > 0.05 therefore we cannot reject the null and can state that on average omnivores do not sleep significantly longer than herbivores.
+
+
+Question 4. Perform an appropriate statistical test to determine whether the proportion of domesticated animal types in the population of animal types is greater than 5%
+
+Create new col with is domesticated or not and remove NAs
+```{r}
+sleep <- sleep %>% 
+  mutate(is_domesticated = if_else(conservation == "domesticated", "domesticated", "wild"))
+
+sleep_clean <- sleep %>% 
+  filter(!is.na(is_domesticated))
+```
+
+> H0: the proportion of domesticated animal types is not significantly greater than 5%
+> H1: it is signif. greater than 5%
+
+```{r}
+domesticated_null_dist <- sleep_clean %>% 
+  specify(response = is_domesticated, success = "domesticated") %>% 
+  hypothesise(null = "point", p = 0.05) %>% 
+  generate(reps = 1000, type = "draw") %>% 
+  calculate(stat = "prop")
+```
+
+```{r}
+domesticated_observed_stat <-  sleep_clean %>%
+  specify(response = is_domesticated, success = "domesticated") %>% 
+  calculate(stat = "prop")
+
+domesticated_observed_stat
+```
+0.18 pretty high relative to 5% so indicating signif diff. 
+
+```{r}
+domesticated_null_dist %>% 
+  visualise(bins = 30) +
+  shade_p_value(obs_stat = domesticated_observed_stat, direction = "both")
+  
+```
+
+```{r}
+domesticated_null_dist %>% 
+  get_p_value(obs_stat = domesticated_observed_stat, direction = "both")
+```
+P value is 0, ergo below alpha so have strong evidence that the proportion of domesticated animals in the sampled population is significnatly greater than 5%.
+
+
+1.2 Hypothesis testing - Defining the Hypothesis
+
+# Q1
+Sample population - either do or do not know of shop - could do draw if using string statement or bootstrap if made binary - testing if greater so could use one-tailed ("right").
+
+H0: know of shop != 40%
+H1: know of shop >= 40%
+
+H0: the % of people that know the shop is not different from 40%
+H1: the % of people that know the shop is different from 40%
+
+# Q2
+Two-tailed sample test using null distribution and permute
+
+H0: The CTR of the site with the banner at the top is the same or lower than the CTR of the site with the banner on the right.
+H1: CTR on with banner on top is higher than site with banner on righ
+
+
+H0: CTR at top =< CTR at right
+H1: CTR at top > CTR at right
+
+# Q3
+Assess mean difference (mu =), one tailed test using bootstrapping.
+
+H0: weekly part width mean same as 145mm
+H1: weekly part width mean differs from 145mm
+
+H0: width = 145
+H1: width != 145
+
+1.3
+
+# Q1 
+Do not reject null, P value greater than alpha so indicative proportion of people
+in town having heard of the shop is not higher than 40%.
+
+# Q2
+P value below alpha so can reject the null inferring that locating the CTR on sites 
+with the banner at the top is greater relative to sites with the CTR on the right.
+
+# Q3
+P value higher than alpha so cannot reject the null inferring that the mean width of
+does not differ from 14mm.

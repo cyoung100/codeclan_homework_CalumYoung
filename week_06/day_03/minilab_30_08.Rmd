@@ -1,0 +1,113 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+
+library(tidyverse)
+
+house_sales <- janitor::clean_names(read_csv("data/ames.csv"))
+
+glimpse(house_sales)
+head(house_sales)
+names(house_sales)
+
+```
+Q2
+```{r}
+house_sale_stats <- house_sales %>% 
+  summarise(count = n(),
+            mean = mean(sale_price),
+            sd = sd(sale_price))
+
+
+
+  ggplot(house_sales,aes(x = sale_price)) +
+  geom_histogram(aes(y = after_stat(density)),  colour = "white", fill = "springgreen")+
+  labs(x = "") +
+  stat_function(
+    fun = dnorm,
+    args = list(
+    mean = house_sale_stats$mean,
+    sd = house_sale_stats$sd),
+    colour = "red")
+
+
+
+```
+Data has a non-normal distribution.
+
+
+Q3
+```{r}
+house_sale_stats
+
+sale_mean <- house_sale_stats$mean
+
+```
+
+Q4
+```{r}
+library(infer)
+
+set.seed(5)
+
+results_tib <- tibble()
+
+for (sample_sales in 1:1000) {
+
+  #make 100 obs random sample pop.
+sample_sales_100 <- house_sales %>% 
+  rep_sample_n(size = 100, reps = 1) %>%
+  ungroup() %>% 
+  select(sale_price)
+  
+ #create bootstrap distribution for sale_price
+sample_sales_bootstrap <- sample_sales_100 %>% 
+  specify(response = sale_price) %>% 
+  generate(reps = 1000, type = "bootstrap") %>% 
+  calculate(stat = "mean")
+  
+# get CI for above distribution
+ci_sales <- sample_sales_bootstrap %>% 
+  get_confidence_interval(level = 0.95, type = "percentile")
+
+sales_results <- c(sample_sales = sample_sales,
+                   lower = ci_sales %>% 
+                     pull(lower_ci),
+                   upper = ci_sales %>% 
+                     pull(upper_ci)
+)
+
+results_tib <- results_tib %>% 
+  bind_rows(sales_results)
+  
+}
+```
+
+Q5 
+```{r}
+
+#didnt work, can you tell why
+library(dplyr)
+
+results_tib <- results_tib %>% 
+  mutate(popn_param_in_ci = ifelse(between(sale_mean, lower, upper), TRUE, FALSE))
+
+
+```
+
+```{r}
+results_tib <- results_tib %>% 
+  mutate(popn_param_in_ci = lower <= sale_mean & sale_mean <= upper) 
+
+```
+
+Q6
+```{r}
+results_tib %>% 
+  summarise(CI_prop_w_pop_par = mean(popn_param_in_ci))
+```
+I dont think you'd know the if the sample has the correct param without diving into
+it and assessing the distribution
