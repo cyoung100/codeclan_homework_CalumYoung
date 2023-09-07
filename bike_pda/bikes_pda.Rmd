@@ -1,0 +1,369 @@
+---
+title: "Bike report PDA"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_float: true
+    number_sections: true
+    df_print: paged
+    css: ../../../styles.css
+  pdf_document: default
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = 'center')
+library("tidyverse")
+```
+
+# 1. Documentation
+
+In this report data sourced from the company NYC Citi Bikes (https://www.ride.citibikenyc.com/) will be analysed to answer three key business questions:
+
+  1. How do Citi bike hires vary over time?
+  2. Do Citi bike hires differ between rider demographic?
+  3. Do any other patterns exist?
+  
+```{r}
+library(tsibbledata)
+library(tidyverse)
+library(stringr)
+library(infer)
+library(leaflet)
+
+bikes <- nyc_bikes
+
+```
+  
+  
+  
+# 2. Data Cleaning
+```{r}
+library(lubridate)
+
+# Separate all date levels into separate columns for start/end of journeys,
+# Extract time stamp and convert to time format,
+# Calculate journey duration
+# extract age
+
+bikes_clean <- bikes %>% 
+  mutate(
+    day_start = day(start_time),
+    month_start = month(start_time, label = T, abbr = F),
+    year_start = year(start_time),
+    weekday_start = wday(start_time, label = T), 
+    day_end = day(stop_time),
+    month_end = month(stop_time, label = T, abbr = F),
+    year_end = year(stop_time),
+    weekday_end = wday(stop_time, label = T), 
+    time_start = hms(str_extract(start_time, "\\d{2}:\\d{2}:\\d{2}" )),
+    time_end = hms(str_extract(stop_time, "\\d{2}:\\d{2}:\\d{2}" )),
+    duration = difftime(stop_time, start_time),
+    date = make_datetime(year_start, month_start, day_start),
+    age = 2023 - birth_year
+    )
+
+
+# Build function which rounds time stamp to 5 min intervals
+
+rounded_time <- function(start_time){
+  rounded_time <- round_date(start_time, unit = "60 mins")
+  format(rounded_time, format = "%HH %MM %SS")
+}
+
+bikes_clean<- bikes_clean %>% 
+  mutate(
+    round_time = as.factor(rounded_time(start_time))
+  )
+
+bikes_clean <- bikes_clean %>% 
+  mutate(hour = as.factor(str_extract(round_time, "\\d{2}")))
+
+
+# Define orders of days of week
+
+bikes_clean <- bikes_clean %>% 
+  mutate(weekday_start = factor(weekday_start, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")))
+
+```
+
+Addition of weather data and joining with bike data: sourced from https://www.visualcrossing.com/
+```{r}
+weather <- read_csv("new york 2018-01-01 to 2018-12-31.csv")
+
+head(weather)
+
+weather <- weather %>% 
+  mutate(date = dmy(datetime))
+
+bike_weather <- inner_join(bikes_clean, weather, "date")
+
+```
+
+
+
+# 3. Data Visualisation
+
+The first analysis was carried out on journey duration, trends explored included how citi bike usage varies throughout the week, month and year and also throughout an single day. It was hypothesized that during the working week there would be an abundance of journeys around 9am and 5pm of similar duration to coincide with commuters using the bikes to get to work. During the summer months e.g. June to August it was expected that there would be overall more use of the bikes but also people using them for longer periods are as visiting tourists explored the city. In contrast, during winter bike journeys overall were expected to decrease and those that did occur would be short in duration. This is due to poor weather conditions making cycling difficult.
+
+```{r}
+duration_stats_day <- bikes_clean %>% 
+  group_by(weekday_start, type) %>% 
+  summarise(
+    mean_day_duration = mean(duration),
+    SE = sd(duration) / sqrt(length(duration)),
+    SD = sd(duration)
+  )
+
+
+duration_stats_day %>%
+  ggplot(aes(x = weekday_start, y = mean_day_duration, fill = type)) +
+  geom_bar(stat = "identity", colour = "black", position = position_dodge(width = 0.9)) +
+  geom_errorbar(aes(ymin = mean_day_duration - SE, ymax = mean_day_duration + SE), position = position_dodge(width = 0.9), width = 0.5) +
+  theme_minimal() +
+  labs(
+    title = "Citi bike hire journey time",
+    y = "Mean hire duration (minutes)",
+    x = "",
+    fill = "Account type"
+  )
+  
+```
+
+From the above plot its is clear that customers are on average using citi bikes for longer journeys relative
+to subscribers throughout the week. Subscribers showed similar daily usages Monday to Thursday, expectantly from
+commuting journeys. On Fridays subscriber duration increased drastically indicating usage was bike for higher for
+non-work purposes. 
+
+
+```{r}
+duration_stats_month <- bikes_clean %>% 
+  group_by(month_start, type) %>% 
+  summarise(
+    mean_month = mean(duration),
+    SE = sd(duration) / sqrt(length(duration)),
+    SD = sd(duration)
+  ) 
+
+duration_stats_month %>%
+  ggplot(aes(x = reorder(month_start, -as.numeric(month_start)), y = mean_month, fill = type)) +
+  geom_bar(stat = "identity", colour = "black", position = position_dodge(width = 0.9)) +
+  geom_errorbar(aes(ymin = mean_month - SE, ymax = mean_month + SE), position = position_dodge(width = 0.9), width = 0.5) +
+  theme_minimal() +
+  labs(
+    title = "Citi bike hire journey time",
+    y = "Mean hire duration (minutes)",
+    x = "",
+    fill = "Account type"
+  ) +
+  coord_flip()
+```
+
+```{r}
+daily_usage <- bikes_clean %>%
+  group_by(weekday_start, type) %>%
+  summarise(
+    count = n())
+
+
+daily_usage %>%
+  ggplot(aes(x = weekday_start, y = count, fill = type)) +
+  geom_bar(stat = "identity", colour = "black", position = "dodge") +
+  theme_minimal() +
+  labs(
+    title = "Citi bike daily hires",
+    y = "Mean hires recorded",
+    x = "",
+    fill = "Account type"
+  )
+```
+
+```{r}
+full_usage <- bikes_clean %>%
+  group_by(type, date) %>%
+  summarise(daily_count = n())
+
+
+full_usage %>% 
+  ggplot(aes(x = date, y = daily_count, colour = type)) + 
+  geom_point(alpha = 0.35) +
+  geom_line(alpha = 0.35) +
+  geom_smooth(se = F, span = 0.2) +
+  labs(
+    y = "Daily hires",
+    x = "",
+    colour = "Account Type"
+  )
+
+
+```
+
+
+
+```{r}
+gender_duration <- bikes_clean %>% 
+  filter(gender != "Unknown",
+         duration < 1000) %>% 
+  group_by(weekday_start, gender) %>% 
+  summarise(
+    mean_day_duration = mean(duration),
+    SE = sd(duration) / sqrt(length(duration)),
+    SD = sd(duration)
+  )
+
+
+gender_duration %>%
+  ggplot(aes(x = weekday_start, y = mean_day_duration, fill = gender)) +
+  geom_bar(stat = "identity", colour = "black", position = position_dodge(width = 0.9)) +
+  geom_errorbar(aes(ymin = mean_day_duration - SE, ymax = mean_day_duration + SE), position = position_dodge(width = 0.9), width = 0.5) +
+  theme_minimal() +
+  labs(
+    title = "Hire duration between gender",
+    y = "Mean hire duration (minutes)",
+    x = "",
+    fill = "Gender"
+  )
+
+```
+
+In general not much variation between gender in hire duration except for Fridays where females used bikes for considerably longer. 
+
+```{r}
+gender_usage <- bikes_clean %>%
+  filter(gender != "Unknown") %>% 
+  group_by(gender, weekday_start) %>%
+  summarise(daily_count = n())
+
+
+gender_usage %>% 
+  ggplot(aes(x = weekday_start, y = daily_count, fill = gender)) + 
+  geom_bar(stat = "identity", colour = "black", position = "dodge")+
+  theme_minimal() +
+  labs(
+    title = "Number of hires between gender",
+    y = "Number of hires",
+    x = "",
+    fill = "Gender"
+  )
+
+```
+
+
+
+```{r}
+
+time_gender <- 
+  bikes_clean %>% 
+  group_by(hour, gender) %>% 
+  summarise(hour_count = n())
+
+
+time_gender %>% 
+  filter(gender != "Unknown") %>% 
+  ggplot(aes(x = hour, y = hour_count, fill = gender)) +
+  geom_col(position = "dodge") +
+  labs(
+    y = "Daily hires",
+    x = "Hour of day",
+    fill = "Gender"
+  )
+```
+## Attempt at combining axis
+```{r}
+
+full_usage <- bike_weather %>%
+  group_by(precip, date) %>%
+  summarise(daily_count = n()) %>% 
+  ungroup()
+
+```
+
+```{r}
+
+solar <- bike_weather %>%
+  group_by(solarradiation, date) %>%
+  summarise(daily_count = n()) %>%
+  ungroup() %>%
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_count, color = "Daily Hires"), alpha = 0.2) +
+  geom_line(aes(y = solarradiation / 8, color = "Solar radiation (kWh/m2)"), alpha = 0.5) +
+  geom_smooth(aes(y = daily_count, color = "Daily Hires"), se = FALSE, span = 0.2) +
+  geom_smooth(aes(y = solarradiation / 8, color = "Solar radiation (kWh/m2)"), se = FALSE, span = 0.2) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ . * 8, name = "Solar radiation (kWh/m2)"), name = "Number of hires\n",
+    breaks = seq(0, 40, by = 10),  
+    labels = seq(0, 40, by = 10)
+  ) +
+  labs(
+    y = "Daily Hires",
+    x = "",
+    color = ""
+  ) +
+  scale_color_manual(
+    values = c("Daily Hires" = "red", "Solar radiation (kWh/m2)" = "orange")
+  )
+
+solar
+
+```
+
+```{r}
+temp <- bike_weather %>%
+  group_by(tempmax, date) %>%
+  summarise(daily_count = n()) %>%
+  ungroup() %>%
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = daily_count, color = "Daily Hires"), alpha = 0.2) +
+  geom_line(aes(y = tempmax / 1, color = "Max. temp (oC)"), alpha = 0.5) +
+  geom_smooth(aes(y = daily_count, color = "Daily Hires"), se = FALSE, span = 0.2) +
+  geom_smooth(aes(y = tempmax / 1, color = "Max. temp (oC)"), se = FALSE, span = 0.2) +
+  scale_y_continuous(
+    sec.axis = sec_axis(~ . * 1, name = "Max. temp (oC)\n"), name = "Number of hires\n",
+    breaks = seq(0, 40, by = 10),  
+    labels = seq(0, 40, by = 10)
+  ) +
+  labs(
+    y = "Daily Hires",
+    x = "",
+    color = ""
+  ) +
+  scale_color_manual(
+    values = c("Daily Hires" = "red", "Max. temp (oC)" = "black")
+  )
+
+```
+
+```{r}
+library(gridExtra)
+
+full_plot <- grid.arrange(temp, solar,
+             ncol = 1, nrow = 2)
+
+full_plot <- grid.arrange(temp, solar,
+             ncol = 1, nrow = 2)
+
+
+```
+
+
+
+# What is the geographical spread of start points of bike hires?
+
+```{r}
+station_stat <- bike_weather %>% 
+  group_by(start_lat, start_long) %>% 
+  summarise(count = n())
+
+
+station_stat %>% 
+  leaflet() %>% 
+  addTiles() %>% 
+  addCircleMarkers(lng = ~start_long,
+                   lat = ~start_lat,
+                   radius = ~count/20,
+    popup = ~paste("Count:", count)
+  )
+
+```
+

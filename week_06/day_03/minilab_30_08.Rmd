@@ -102,12 +102,16 @@ results_tib <- results_tib %>%
 results_tib <- results_tib %>% 
   mutate(popn_param_in_ci = lower <= sale_mean & sale_mean <= upper) 
 
+results_tib
+
 ```
 
 Q6
 ```{r}
 results_tib %>% 
   summarise(CI_prop_w_pop_par = mean(popn_param_in_ci))
+
+results_tib
 ```
 I dont think you'd know the if the sample has the correct param without diving into
 it and assessing the distribution
