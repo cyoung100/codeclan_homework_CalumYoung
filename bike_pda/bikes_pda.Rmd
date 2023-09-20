@@ -26,19 +26,33 @@ library("tidyverse")
 
 # Documentation
 
-In this report data sourced from the company NYC Citi Bikes (https://www.ride.citibikenyc.com/) will be analysed to answer three key business questions:
+In this report data sourced from the company NYC Citi Bikes 
+(https://www.ride.citibikenyc.com/) will be analysed to answer three key
+business questions:
 
   1. How do Citi bike hires vary over time?
   2. Do Citi bike hires differ between rider demographic?
   3. Do any other patterns exist?
   4. What is the geographical spread of the start points of bike hires?
   
+Additional analysis was carried out using supplementary weather that was taken 
+from https://www.visualcrossing.com/ (accessed :06/09/23). Weather data was 
+joined with the inital citi bikes data set to from a single object to enable 
+analysis. A list of the packages use is below and a description of the cleaning
+carried out is also included. 
+
+The author was Calum Young and all analysis was carried out in RStudio 2023.06.1.
+  
+
 ```{r message=FALSE, warning=FALSE}
+# Load required packages and citi bikes dataset
+
 library(tsibbledata)
 library(tidyverse)
 library(stringr)
 library(infer)
 library(leaflet)
+library(lubridate)
 
 bikes <- nyc_bikes
 
@@ -46,14 +60,13 @@ bikes <- nyc_bikes
   
   
   
-# Data Cleaning
+# Data Cleaning 
 ```{r message=FALSE, warning=FALSE}
-library(lubridate)
 
 # Separate all date levels into separate columns for start/end of journeys,
 # Extract time stamp and convert to time format,
-# Calculate journey duration
-# extract age
+# Calculate journey duration, 
+# extract age of users.
 
 bikes_clean <- bikes %>% 
   mutate(
@@ -72,8 +85,13 @@ bikes_clean <- bikes %>%
     age = 2023 - birth_year
     )
 
+# make a new column splitting age into incremental 5 year group
+bikes_clean <- bikes_clean %>% 
+mutate(age_group = paste0(floor(age / 5) * 5, '-', floor(age / 5) * 5 + 4))
 
-# Build function which rounds time stamp to 5 min intervals
+
+# Build function which rounds time stamp to 60 min intervals so hour of use 
+# can be inferred.
 
 rounded_time <- function(start_time){
   rounded_time <- round_date(start_time, unit = "60 mins")
@@ -83,55 +101,69 @@ rounded_time <- function(start_time){
 bikes_clean<- bikes_clean %>% 
   mutate(
     round_time = as.factor(rounded_time(start_time))
-  )
+ )
 
-# make column splitting age into 5 year groups
-bikes_clean <- bikes_clean %>% 
-mutate(age_group = paste0(floor(age / 5) * 5, '-', floor(age / 5) * 5 + 4))
-
+# make a new column which shows the hour day a hire was made
 bikes_clean <- bikes_clean %>% 
   mutate(hour = as.factor(str_extract(round_time, "\\d{2}")))
 
 
-# Define orders of days of week
+# Define orders of days of week for visualisation 
 
 bikes_clean <- bikes_clean %>% 
   mutate(weekday_start = factor(weekday_start, levels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")))
 
 ```
 
-Addition of weather data and joining with bike data: sourced from https://www.visualcrossing.com/
-
+## Addition of weather data and joining with bike data
 ```{r message=FALSE, warning=FALSE}
+
+# Load in weather dataset
 weather <- read_csv("new york 2018-01-01 to 2018-12-31.csv")
 
-head(weather)
-
+# convert date formate
 weather <- weather %>% 
   mutate(date = dmy(datetime))
 
+# join datasets together
 bike_weather <- inner_join(bikes_clean, weather, "date")
 
 ```
 
 # Data Visualisation
 
-The first analysis was carried out on journey duration, trends explored included how citi bike usage varies throughout the week, month and year and also throughout an single day. It was hypothesized that during the working week there would be an abundance of journeys around 9am and 5pm of similar duration to coincide with commuters using the bikes to get to work. During the summer months e.g. June to August it was expected that there would be overall more use of the bikes but also people using them for longer periods are as visiting tourists explored the city. In contrast, during winter bike journeys overall were expected to decrease and those that did occur would be short in duration. This is due to poor weather conditions making cycling difficult.
+The first analysis was carried out on journey duration, trends explored were how
+citi bike usage varies throughout the week, month and year and also throughout 
+an single day. It was hypothesized that during the working week there would be 
+an abundance of journeys around 9am and 5pm of similar duration to coincide with
+commuters using the bikes to get to work. During the summer months e.g. June to
+August it was expected that there would be overall more use of the bikes but a
+lso people using them for longer periods are as visiting tourists explored the 
+city. In contrast, during winter bike journeys overall were expected to decrease 
+and those that did occur would be short in duration. This is due to poor weather 
+conditions making cycling difficult.
 
 ## Hire Duration
 
-The overall mean hire duration was 12.28 minutes. From the plot below its is clear that customers are on average using citi bikes 
-for longer journeys relative to subscribers throughout the week. Subscribers showed similar daily usages Monday to Thursday, 
-expectantly from commuting journeys. On Fridays subscriber duration increased drastically indicating usage was bike for higher for non-work purposes. As subscribers are already enrolled, we will focus on augmenting the spend by the customer group. As customers are using bikes
-for longer on Saturdays or Sundays, pricing could be increased to a premium weekend rate. A short term weekend subscription could then be 
-offered as an alternative. This would introduce customers to the benefits of the subscription service and potentially hold them as long term
-account holders.
+The overall mean hire duration was 12.28 minutes. From the plot below its is 
+clear that customers are on average using citi bikes for longer journeys 
+relative to subscribers throughout the week. Subscribers showed similar daily 
+usages Monday to Thursday, expectantly from commuting journeys. On Fridays 
+subscriber duration increased drastically indicating usage was bike for higher
+for non-work purposes. As subscribers are already enrolled, we will focus on 
+augmenting the spend by the customer group. As customers are using bikes
+for longer on Saturdays or Sundays, pricing could be increased to a premium 
+weekend rate. A short term weekend subscription could then be offered as an 
+alternative. This would introduce customers to the benefits of the subscription 
+service and potentially hold them as long term account holders.
 
 
 ```{r message=FALSE, warning=FALSE}
+# calculate average journey duration
 mean_duration <- bikes_clean %>% 
   summarise(mean_duration = mean(duration))
 
+# calulate summary stats to provide std error bars
 duration_stats_day <- bikes_clean %>% 
   group_by(weekday_start, type) %>% 
   summarise(
@@ -140,7 +172,8 @@ duration_stats_day <- bikes_clean %>%
     SD = sd(duration)
   )
 
-
+# build plot showing mean journey duration between account type during each week 
+# day.
 duration_stats_day %>%
   ggplot(aes(x = weekday_start, y = mean_day_duration, fill = type)) +
   geom_bar(stat = "identity", colour = "black", position = position_dodge(width = 0.9)) +
@@ -157,19 +190,26 @@ duration_stats_day %>%
 
 ## Weekly Hires
 
-Analysis of the mean hires between customers and subscribers throughout the week show clearly that subscriber usage greatly outnumbers
-customer hires. As subscribers are expected to be permanent residents of NYC, efforts should be increased to advertise to the service 
-to new arrivals to the city, namely tourists who may not be aware citi bikes are a available. Suggestions include more adverts at airport 
-arrivals and subway lines. As subscribers are the dominant group of accounts, an offer should be introduced that gives discounts or perks to subscribers who reccommend the service to a friend. This could be done via a phone text alert or through the customers email. This would increase the brand awareness and benefit loyal customers. 
+Analysis of the mean hires between customers and subscribers throughout the week 
+show clearly that subscriber usage greatly outnumbers customer hires. As 
+subscribers are expected to be permanent residents of NYC, efforts should be 
+increased to advertise to the service to new arrivals to the city, namely 
+tourists who may not be aware citi bikes are a available. Suggestions include 
+more adverts at airport arrivals and subway lines. As subscribers are the 
+dominant group of accounts, an offer should be introduced that gives discounts 
+or perks to subscribers who recommend the service to a friend. This could be 
+done via a phone text alert or through the customers email. This would increase 
+the brand awareness and benefit loyal customers. 
 
 
 ```{r message=FALSE, warning=FALSE}
+# count number of rows to show number of daily hires within each weekday
 daily_usage <- bikes_clean %>%
   group_by(weekday_start, type) %>%
   summarise(
     count = n())
 
-
+# build plot showing daily average of citi bike hires
 daily_usage %>%
   ggplot(aes(x = weekday_start, y = count, fill = type)) +
   geom_bar(stat = "identity", colour = "black", position = "dodge") +
@@ -184,16 +224,32 @@ daily_usage %>%
 
 ## Yearly Hire Patterns between gender
 
-As expected annual variation in the number of hires shows increased usage towards the summer months, with peak usage being between July and August and lowest between December and February. During these quiet months it is suggested that the reduced need for bikes could give the citi bikes a good opportunity to collect bikes reported as broken or malfunctioning and give time for repairs to be made without causing a high level of disruption to the service. The yearly trend was similar for both genders but it is clear that males use citi bikes much more frequently than females. The daily maximum hire for males was 28 whereas from females it was only 13. Efforts should be made to increase female usage of citi bikes, be it through offers and campaigns which are directed at females specifically. To increase gender equity in bike-sharing female focus groups should be surveyed on what limits their use of bikes, be it safety concerns, lack of bike lanes and infrastructure etc. Addressing these factors would hopefully increase female usage rates. 
+As expected annual variation in the number of hires shows increased usage towards 
+the summer months, with peak usage being between July and August and lowest 
+between December and February. During these quiet months it is suggested that 
+the reduced need for bikes could give the citi bikes a good opportunity to collect
+bikes reported as broken or malfunctioning and give time for repairs to be made 
+without causing a high level of disruption to the service. The yearly trend was 
+similar for both genders but it is clear that males use citi bikes much more 
+frequently than females. The daily maximum hire for males was 28 whereas from 
+females it was only 13. Efforts should be made to increase female usage of citi 
+bikes, be it through offers and campaigns which are directed at females 
+specifically. To increase gender equity in bike-sharing female focus groups 
+should be surveyed on what limits their use of bikes, be it safety concerns, 
+lack of bike lanes and infrastructure etc. Addressing these factors would 
+hopefully increase female usage rates. 
 
 
 ```{r message=FALSE, warning=FALSE}
+# summarise number of hires grouped by gender - unknown category excluded as
+# value would not add anything to analysis. 
 full_usage <- bikes_clean %>%
   filter(gender != "Unknown") %>% 
   group_by(gender, date) %>%
   summarise(daily_count = n())
 
-
+# Build plot showing yearly usage of citibike split between male/female gender 
+# groups
 full_usage %>% 
   ggplot(aes(x = date, y = daily_count, colour = gender)) + 
   geom_line(alpha = 0.35) +
@@ -214,12 +270,14 @@ full_usage %>%
 The age of the average user was 40 for females and 42 for males. As cycling is a healthy and cheap means of transport, business strategies that focus on the younger population should be increased. In the lowest age bracket 20-24, there were only 3 recorded hires in 2018, all of which were male. In order to increase the use of citi bikes by younger individuals strategies could be introduced that make it more appealing. For example, student discounts, a reward scheme where x number of miles accumulated gives a free coffee etc. Getting a younger population introduced to the system early on ensures a long term customer. Surveys should be carried out why young people aren't using the bikes, is the cost too high to rent regularly or do they own their own. It is advised to investigate if having more stations closer to schools and university campuses increase usage.
 
 ```{r message=FALSE, warning=FALSE}
+# Counts number of hires of each gender and within incremental age groups
 gender_age <- bikes_clean %>% 
   filter(gender != "Unknown") %>% 
   group_by(age_group, gender) %>% 
   summarise(use = n())
 
-
+# builds a plots showing hire usage between age groups and split between male/
+# female
 gender_age %>%
   ggplot(aes(x = age_group, y = use, fill = gender)) +
   geom_bar(stat = "identity", colour = "black", position = position_dodge(width = 0.9)) +
@@ -234,7 +292,7 @@ gender_age %>%
 ```
 
 ```{r message=FALSE, warning=FALSE}
-
+# report mean age of users in males and females.
 bikes_clean %>%
   filter(gender != "Unknown") %>% 
   group_by(gender) %>% 
@@ -243,15 +301,24 @@ bikes_clean %>%
 ```
 ## Hourly usage between genders
 
-As predicted, peak usage occurs around business rush hours. As was seen before the is a large disparity between hire usage between genders with males continually superseding females in usage at any hour of the day. Between late evening and early morning hours 10pm - 5am, female usage is at an all time low. This may be due to safety concerns and again a lack of suitable cycling infrastructure. Improving cycling routes with streetlights may increase female uage of the system after hours. Publicity campaigns that promote cycling in pairs or a group may also increase likelihood that females use the service as a means of returning home late at night. 
+As predicted, peak usage occurs around business rush hours. As was seen before
+the is a large disparity between hire usage between genders with males continually superseding females in usage at any hour of the day. Between late evening and
+early morning hours 10pm - 5am, female usage is at an all time low. This may be 
+due to safety concerns and again a lack of suitable cycling infrastructure. 
+Improving cycling routes with streetlights may increase female uage of the system 
+after hours. Publicity campaigns that promote cycling in pairs or a group may 
+also increase likelihood that females use the service as a means of returning 
+home late at night. 
 
 ```{r message=FALSE, warning=FALSE}
+# collates the times hires were made and split between each gender
 time_gender <- 
   bikes_clean %>% 
   group_by(hour, gender) %>% 
   summarise(hour_count = n())
 
-
+# build plot summarizing the number of hires at each hour of the day between male/
+# female
 time_gender %>% 
   filter(gender != "Unknown") %>% 
   ggplot(aes(x = hour, y = hour_count, fill = gender)) +
@@ -268,16 +335,32 @@ time_gender %>%
 
 ## What is the geographical spread of start points of bike hires?
 
-The geographical spread of citi bike journey starts within this dataset is dispersed mainly within the Jersey City district although there are many or pockets scattered in the surrounding area. The map below shows this distribution and the diameter of blue circles is indicative of how many hires began at each site; the larger the circle the more that station is used. This is highly indicative of sites that used most often and therefore may benefit customers most if they are enlarged and more bikes are available to hire. For example the station at the corner of Christopher Columbus Drive and Grove Street had 434 journey starts which was 1.5 times more than the second most used station at West Hamilton place. In contrast, the station at New Jersey City University was only used once as a start point indicating it is not in a viable location and could be more effective if located elsewhere.
+The geographical spread of citi bike journey starts within this dataset is 
+dispersed mainly within the Jersey City district although there are many or 
+pockets scattered in the surrounding area. The map below shows this distribution 
+and the diameter of blue circles is indicative of how many hires began at each 
+site; the larger the circle the more that station is used. This is highly 
+indicative of sites that used most often and therefore may benefit customers 
+most if they are enlarged and more bikes are available to hire. For example the
+station at the corner of Christopher Columbus Drive and Grove Street had 434 
+journey starts which was 1.5 times more than the second most used station at 
+West Hamilton place. In contrast, the station at New Jersey City University was 
+only used once as a start point indicating it is not in a viable location and 
+could be more effective if located elsewhere.
 
-The second map shows the stations where journeys ended and the maps are highly similar showing again which stations are most utilized throughout this region of the city. 
+The second map shows the stations where journeys ended and the maps are highly 
+similar showing again which stations are most utilized throughout this region 
+of the city. 
 
 ```{r message=FALSE, warning=FALSE}
+# This chunk builds up geospatial data of the start points of hires 
 station_stat <- bike_weather %>% 
   group_by(start_lat, start_long) %>% 
   summarise(count = n())
 
-
+# this builds interactive plot showing location of bike start points, denoted 
+# by blue circles, the larger the circle shows the number of bikes at that 
+# specific station
 station_stat %>% 
   leaflet() %>% 
   addTiles() %>% 
@@ -290,6 +373,8 @@ station_stat %>%
 ```
 
 ```{r}
+
+# Same setup as above but shows end stations in red circles
 station_end <- bike_weather %>% 
   group_by(end_lat, end_long) %>% 
   summarise(count = n())
@@ -306,27 +391,27 @@ station_end %>%
   )
 ```
 
+## Additional:  Is there a relationship between citi bike hires and weather conditions?
 
-## Bonus trend - Good weather is good indicator of increased citi bike hire usage
-
-
-```{r message=FALSE, warning=FALSE}
-
-
-full_usage <- bike_weather %>%
-  group_by(precip, date) %>%
-  summarise(daily_count = n()) %>% 
-  ungroup()
-
-```
+Comparing daily hires over the year against both solar radiation i.e. sunshine 
+strength and daily temperature max shows complimenting trends. Looking at the
+plots we can see the number of citi bike hires increases as the daily temperature 
+and solar radiations also decrease. In contrasts, as temperatures and sunshine 
+levels drop, so too does the number of hires. It can therefore be inferred that 
+as weather conditions improve in spring and summer months, it is more common
+for people to use the citi bike hire service. When the weather is colder and 
+less sunny between November and February hires drop and presumably people would
+rather use public transport or vehicles, taxi cabs etc. 
 
 ```{r message=FALSE, warning=FALSE}
 
+# pre-marginalizing of forthcoming plots
 plot_dimensions <- theme(
-  plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm")  # Adjust the margins as needed
+  plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm")
 )
 
-
+# builds a plot which shows year on the x axis, number of hires on the y and 
+# daily solar radiation on the z
 solar <- bike_weather %>%
   group_by(solarradiation, date) %>%
   summarise(daily_count = n()) %>%
@@ -358,10 +443,8 @@ solar
 ```
 
 ```{r}
-plot_dimensions <- theme(
-  plot.margin = margin(0.5, 0.5, 0.5, 0.5, unit = "cm")  # Adjust the margins as needed
-)
-
+## builds a plot which shows year on the x axis, number of hires on the y and 
+# daily temperature maximums radiation on the z
 
 temp <- bike_weather %>%
   group_by(tempmax, date) %>%
@@ -390,11 +473,6 @@ temp <- bike_weather %>%
 temp
 ```
 
-
-
-
-
-
 # Ethics statement
 
 The data set used here has been carefully analysed as to avoid any ethical infractions. To ensure the protection and
@@ -403,3 +481,11 @@ report shows the entire code used to ensure transparency in the methods used is 
 hence the quality and accuracy is dependent on that source. No new rows were added during analysis. Recommendations based 
 on age and gender and purely from a generalized economic perspective and in no way isolate any individuals from any one
 demographic. 
+
+# Conclusion
+
+This analysis of Citi Bike data provides an data driven source of insights for 
+optimizing this bike-sharing service. By focusing on improving gender equity, 
+targeting younger populations, enhancing safety measures, and expanding 
+strategically in response to geographical insights, Citi Bike can strengthen 
+its position and foster sustainable growth in the urban mobility market.

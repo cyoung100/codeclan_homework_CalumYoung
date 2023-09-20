@@ -1,0 +1,110 @@
+---
+title: "Homework - features and elements of multiple regression"
+output: html_notebook
+---
+
+1.
+```{r}
+library(tidyverse)
+
+prices <- read_csv("housing_prices.csv")
+
+head(prices)
+```
+
+2. 0.9 correlation coeff is super high showing variables are strongly correlated, bottom left plot shows this also
+```{r}
+library(GGally)
+
+prices %>% 
+  select(total_bedrooms, total_rooms) %>% 
+  ggpairs()
+
+```
+
+3.
+```{r}
+prices <- prices %>% 
+  select(-total_bedrooms)
+```
+
+4.
+```{r}
+ggpairs(prices , progress = F,
+        lower = list(combo = wrap("facethist", bins = 15)))
+))
+```
+strong correlation: median house value ~ median income
+correlation: median house value ~ latitude
+ocean prox has staggering
+
+```{r}
+prices %>% 
+  ggplot(aes(median_income, median_house_value)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+prices %>% 
+  ggplot(aes(latitude, median_house_value)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
+```{r}
+prices %>% 
+  ggplot(aes(ocean_proximity, median_house_value)) +
+  geom_boxplot()
+```
+
+5.(n - 1): 5 groups so 4 dummies
+
+6. Quite a lot of residuals above 0 intercept. Tails on qq not good, funneling heteroscedasticity; 
+overall not a great model, moderately skewed
+```{r}
+library(ggfortify)
+
+model1 <- lm(median_house_value ~ median_income, data = prices)
+
+model1
+
+autoplot(model1)
+```
+```{r}
+summary(model1)
+```
+```{r}
+model2 <- lm(median_house_value ~ median_income + ocean_proximity, data = prices)
+
+model2
+
+autoplot(model2)
+```
+```{r}
+summary(model2)
+```
+Model explains 55% of variation in median house value, island locations have
+highest influence on prince, inland reduces value. 
+
+8.
+```{r}
+model3 <- lm(log(median_house_value) ~ log(median_income) + ocean_proximity, data = prices)
+
+model3
+
+autoplot(model3)
+
+summary(model3)
+```
+Log transformation improves model R2. 
+
+
+```{r}
+prices %>% 
+  ggplot(aes( x = log(median_income), y = log(median_house_value))) +
+  geom_point() +
+  geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(~ ocean_proximity)
+```
+
