@@ -1,0 +1,82 @@
+---
+title: "Simple linear regression homework"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+
+knitr::opts_chunk$set(echo = TRUE, fig.align = 'center', warning = FALSE, message = FALSE)
+```
+
+```{r}
+
+library(tidyverse)
+library(GGally)
+
+project <- read_csv("project_management.csv")
+
+```
+# Plot the data
+```{r}
+
+project %>% 
+  ggplot(aes(x = estimated_length, y = actual_length)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F) +
+  labs(
+    y = "Actual Length",
+    x = "Estimated Length"
+    
+  )
+```
+
+# Calculate the correlation coefficient 
+```{r}
+
+project %>% 
+  ggcorr(label = T)
+
+```
+Correlation coefficient between actual length and estimated length is 0.8;
+indicating a very strong positive correlation between these variables. 
+
+
+# Perform a simple linear regression
+
+```{r}
+model1 <- lm(actual_length ~ estimated_length, data = project)
+
+model1
+
+summary(model1)
+```
+Estimated length has a significant relationship with actual length allowing
+actual length to be calculated using estimated length. The coeff of 1.2235 tells us
+for every increase in day by 1 increases the actual length by 1.2235 = Jobs are 
+taking longer than expected. The R2 is high (64%) so this the variation in the 
+actual length is well explained by the estimated length.
+
+# Is the relationship statistically significant?
+
+```{r}
+# check diagnostics
+library(ggfortify)
+
+autoplot(model1)
+```
+
+# Diagnostics
+
+Residuals look independent and well spread above/below 0 intercept, QQ plot looks 
+normally distributesalong the slope, with the exception of a couple out outlier 
+shouldn't be an issue as sofew. Scale location plot show no funneling so infers 
+homoscedasticity. Collectively this indicates good model fit of the data. 
+
+```{r}
+cor.test(project$estimated_length, project$actual_length, method = c("pearson"))
+```
+
+
+Pearson's correlation confirms relationship is statistically significant (p < 0.05).

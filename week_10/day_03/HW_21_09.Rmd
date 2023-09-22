@@ -1,0 +1,163 @@
+---
+title: "Manual model development"
+output: html_notebook
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.align = 'center', warning = FALSE, message = FALSE)
+```
+
+
+# Tidy up the data ready for regression:
+```{r}
+library(tidyverse)
+library(GGally)
+library(ggfortify)
+```
+
+```{r}
+house <- read_csv("kc_house_data.csv")
+head(house)
+summary(house)
+```
+# Removal unnecessary variables
+```{r}
+house <- house %>% 
+  select(-c(id, date, sqft_living15, sqft_lot15, zipcode))
+```
+
+# Convert variables where needed
+```{r}
+str(house)
+
+house <- house %>% 
+  mutate(waterfront = as.logical(waterfront),
+         view = as.factor(view),
+         condition = as.factor(condition),
+         grade = as.factor(grade),
+         renovated = ifelse(yr_renovated > 0, T, F)) %>% 
+  select(-yr_renovated)
+  
+```
+# Check for aliased variables 
+```{r}
+alias(price ~ ., data = house)
+```
+
+Sqft_living id'd as an alias for sqft_above and therefore dropped from model
+```{r}
+house <- house %>% 
+  select(-sqft_living)
+  
+```
+
+Systematically build a regression model containing up to four main effects 
+```{r}
+# look at numeric variables
+house_numeric <- house %>% 
+  select_if(is.numeric)
+
+ggpairs(house_numeric)
+```
+
+Price will be my model's response variable, bathroom has good coeff (0.5) and shows
+evidence of regression trend in dotplot, also sqft_above (0.6) and sign of relationship.
+
+Planning on log transforming price as vary massively 
+```{r}
+house %>% 
+  summarise(
+    min = min(price),
+    max = max(price)
+  )
+```
+
+
+
+Now looking at categorical variables
+```{r}
+house_categorical <- house %>% 
+  select_if(function(x) !is.numeric(x)) %>% 
+  bind_cols(house$price)
+
+```
+
+```{r}
+ggpairs(house_categorical)
+```
+Waterfront looks well staggered between price, grade also shows relationship
+
+
+Build some plots with these variables 
+```{r}
+house %>% 
+  ggplot(aes(x = log(price), y = sqft_above)) +
+  geom_point() +
+  geom_smooth(method = "lm", se = F)
+```
+Pretty clear linear trend
+
+Model attempt v.0.1
+```{r}
+model1 <- lm(log(price) ~ sqft_above, data = house)
+summary(model1)
+
+```
+```{r}
+autoplot(model1)
+```
+Significant relationship between sqft_above and price, diagnostics look close to 
+ideal.
+
+R2 is 36% - continue to try and bump up
+
+Next; adding bathrooms
+
+```{r}
+ggplot(house, aes(x = as.factor(bathrooms), y = price)) +
+  geom_boxplot()
+
+# 8 bathrooms? aggressive. 
+```
+
+```{r}
+model2 <- lm(log(price) ~ sqft_above + bathrooms, data = house)
+summary(model2)
+```
+```{r}
+autoplot(model2)
+```
+Same story as sqft_above, only adds 3% onto R2 so not much addition. Will continue 
+
+
+Attempt 3 - Waterfront
+```{r}
+model3 <- lm(log(price) ~ bathrooms + waterfront + sqft_above, data = house)
+
+summary(model3)
+```
+
+```{r}
+autoplot(model3)
+```
+
+All significant and good diagnostics, adding grade as seems logical predictor of
+house price and not too high coeff
+
+```{r}
+model4 <- model3 <- lm(log(price) ~ bathrooms + waterfront + sqft_above + grade, data = house)
+```
+
+```{r}
+summary(model4)
+```
+```{r}
+autoplot(model4)
+```
+
+Higher graded house have significant effect on house prices, model is at 53% pretty good.
+Diagnostics look good on the whole so sticking with final model 
+
+lm(formula = log(price) ~ bathrooms + waterfront + sqft_above + 
+    grade, data = house)
