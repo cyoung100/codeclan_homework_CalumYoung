@@ -1,0 +1,369 @@
+---
+title: "R Notebook"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(tidyverse)
+library(GGally)
+library(ggfortify)
+
+red <- read_csv("data/wine_quality_red.csv")
+white <- read_csv("data/wine_quality_white.csv")
+```
+
+# Intend on doing test/train splitting so starting by splitting data
+
+```{r}
+n_data <- nrow(red)
+
+# assigning 20% of data to test
+red_test_index <- sample(1: n_data, size = n_data * 0.2)
+
+red_test <- slice(red, red_test_index)
+red_train <- slice(red, -red_test_index)
+
+
+#model will be built using red_train data
+```
+
+# Explore data
+```{r}
+head(red_train)
+```
+# Wine ID seems unnecessary, region could be iffy but migh tbe interesting 
+# to see what region the model thinks is good wine, leaving in for now, making a factor
+```{r}
+red_train <- red_train %>% 
+  select(-wine_id) %>% 
+  mutate(region = as.factor(region))
+```
+
+# Look at correlations coefficients
+```{r message=FALSE, warning=FALSE}
+red_train %>% 
+  select(-region) %>% 
+  ggpairs()
+```
+
+# Cant really read as all squashed so doing ggcorr, so get intial coeff
+
+```{r}
+red_train %>%
+  ggcorr(label = T)
+```
+```{r}
+red_train %>% 
+  ggplot(aes( x = region, y = quality)) +
+  geom_boxplot()
+```
+
+Seems region has little effect on perceived quality
+
+
+# Checking for alias variables
+```{r}
+alias(quality ~ ., data = red_train)
+```
+No aliases, ideal. 
+
+# From domain knowledge and above coefficients; starting with sulphates,
+# alcohol, total sulfur dioxides, chlorides
+
+```{r}
+red_train %>%
+  select(quality, sulphates, alcohol, total_sulfur_dioxide, chlorides) %>% 
+  ggpairs()
+```
+
+```{r}
+model1 <- lm(quality ~ alcohol, data = red_train)
+summary(model1)
+```
+
+Using alcohol only gives 22% R2 and pretty low RSE 0.75. 
+
+```{r}
+autoplot(model1)
+```
+
+Some draw from outliers but minor. Overall solid start. QQ good, and residual
+placement well scattered.
+
+# Adding sulphates
+```{r}
+model2 <- lm(quality ~ alcohol + sulphates, data = red_train)
+summary(model2)
+
+```
+
+Adds 2% to R2 but is significant relationship and RSE remains quite low.
+
+```{r}
+autoplot(model2)
+```
+
+Residuals remain acceptable
+
+
+# Adding Chlorides
+```{r}
+model3 <- lm(quality ~ alcohol + sulphates + chlorides, data = red_train)
+summary(model3)
+```
+```{r}
+autoplot(model3)
+```
+
+Still considered acceptable.
+
+Attempting to another predictor
+
+Looking at remaining by themselves.
+
+```{r message=FALSE, warning=FALSE}
+red_train %>% 
+  select(-region, -alcohol, -sulphates, -chlorides) %>% 
+  ggpairs()
+```
+
+Volatile acidty seems good candidate
+
+```{r}
+model4 <- lm(quality ~ alcohol + sulphates + chlorides + volatile_acidity, data = red_train)
+summary(model4)
+```
+```{r}
+autoplot(model4)
+```
+
+RSE lowest its been of any model (0.7), R2 is at highest: 31%. Diagnostics still look
+acceptable. One more ?
+
+
+```{r}
+red_train %>% 
+  select(-region, -alcohol, -sulphates, -chlorides, -volatile_acidity) %>% 
+  ggpairs()
+```
+
+
+Citric acid?
+
+```{r}
+model5 <- lm(quality ~ alcohol + sulphates + chlorides + volatile_acidity + citric_acid, data = red_train)
+summary(model5)
+```
+
+Not significant so sticking with model4.
+
+
+
+Now to use test data to assess model. 
+
+```{r}
+red_predictions_test <- red_test %>% 
+  modelr::add_predictions(model4, var = "predicted_quality") %>% 
+  select(alcohol, sulphates, chlorides, volatile_acidity, quality, predicted_quality)
+
+red_predictions_test
+
+```
+
+Now with MSE
+
+```{r}
+red_predictions_test %>% 
+  mutate(error = predicted_quality - quality,
+         error_2 = error ** 2) %>% 
+  summarise(mse_test = mean(error_2))
+```
+
+```{r}
+red_predictions_train <- red_train %>% 
+  modelr::add_predictions(model4, var = "predicted_quality")
+
+
+mse_train <- red_predictions_train %>% 
+  mutate(error = predicted_quality - quality) %>% 
+  mutate(error_2 = error^2) %>% 
+  summarise(mse_train = mean(error_2))
+
+mse_train
+```
+
+Test MSE : 0.5360179	
+Train MSE: 0.4916475
+
+% diff : = 8.63518%
+
+Pretty good %, quite low considering, Training MSE is lower as expected. 
+
+
+############################################################################
+
+Automated attempt
+
+```{r}
+library(leaps)
+```
+
+```{r}
+red_subsets_forward <- regsubsets(quality ~., data = red_train, nvmax = 12, method = "forward"  )
+```
+
+```{r}
+sum_subsets_forward <- summary(red_subsets_forward)
+sum_subsets_forward
+```
+
+Model has selected as best predictors in desc order 
+
+- alcohol
+- volatile acidity
+- sulphates
+- total sulfur dioxide
+- chlorides
+
+```{r}
+sum_subsets_forward$which
+```
+
+```{r}
+plot(red_subsets_forward, scale = "adjr2")
+```
+Model with highest adjr2 includes volatile acidity, Chlorides, free and total sulfir
+dioxide, pH, sulphates and alcohol
+
+Attemtimng with BIS for increased parsimony (simplicity )
+
+
+```{r}
+plot(red_subsets_forward, scale = "bic")
+```
+Indicated model with lowest BIC includes: 
+
+volatile acidity,
+chlorides, 
+total sulfur dioxide,
+pH,
+sulfates,
+alcohol
+
+```{r}
+plot(sum_subsets_forward$rsq, type = "b")
+```
+
+Around 7 seems indicated, now to penalise measure of fit with BIC
+
+```{r}
+plot(sum_subsets_forward$bic, type = "b")
+```
+6 shows, fits with shaded boxplot outputs
+
+Build model
+```{r}
+auto_model <- lm(quality ~ volatile_acidity + chlorides + total_sulfur_dioxide +
+                   p_h + sulphates + alcohol, data = red_train)
+
+summary(auto_model)
+
+```
+```{r}
+autoplot(auto_model)
+```
+32% R2, 2% higher than manually made model4, diagnostics look good, RSE marginally
+lower than model4 at 0.7. 
+
+
+
+```{r}
+red_predictions_test_auto <- red_test %>% 
+  modelr::add_predictions(auto_model, var = "predicted_quality") %>% 
+  select(alcohol, sulphates, chlorides, volatile_acidity, p_h, total_sulfur_dioxide,
+         quality, predicted_quality)
+
+red_predictions_test_auto
+
+```
+
+Now with MSE
+
+```{r}
+red_predictions_test_auto %>% 
+  mutate(error = predicted_quality - quality,
+         error_2 = error ** 2) %>% 
+  summarise(mse_test_auto = mean(error_2))
+```
+
+```{r}
+red_predictions_train_auto <- red_train %>% 
+  modelr::add_predictions(auto_model, var = "predicted_quality")
+
+
+mse_train_auto <- red_predictions_train_auto %>% 
+  mutate(error = predicted_quality - quality) %>% 
+  mutate(error_2 = error^2) %>% 
+  summarise(mse_train_auto = mean(error_2))
+
+mse_train_auto
+```
+MSE test auto: 0.5089536
+MSE train auto: 0.4873138
+
+
+4% difference, half of manual model 4. 
+
+
+Final comparsion of models
+
+model4 <- lm(quality ~ alcohol + sulphates + chlorides + volatile_acidity, data = red_train)
+
+auto_model <- lm(quality ~ volatile_acidity + chlorides + total_sulfur_dioxide +
+                   p_h + sulphates + alcohol, data = red_train)
+                   
+                   
+```{r}
+AIC(model4)
+BIC(model4)
+
+AIC(auto_model)
+BIC(auto_model)
+```
+
+model4 : AIC = 2753.133
+         BIC = 2784.061
+         
+         
+auto_model : AIC = 2728.358
+             BIC = 2769.595
+             
+             
+auto_model lower on boths AIC and BIC so is better of two models created. 
+
+```{r}
+auto_model
+```
+
+quality = 4.789713 + (-1.056959 * volatile_acidity) + (-1.621185 * chlorides) + (-0.002172 * total_sulfur_dioxide) +
+          (-0.584792 * p_h) +  (0.781013 * sulphates) +  (0.297239  * alcohol)
+          
+          
+          
+Works on white wine?          
+```{r}
+white_model <- lm(quality ~ volatile_acidity + chlorides + total_sulfur_dioxide +
+                   p_h + sulphates + alcohol, data = white)
+
+summary(white_model)
+
+```
+
+```{r}
+autoplot(white_model)
+```
+
+Works ok, diagnostics slight tailing on qq but pretty close. Only issue is R2 bit low. 
+          

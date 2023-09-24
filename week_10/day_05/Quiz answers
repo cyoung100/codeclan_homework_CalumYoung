@@ -1,0 +1,12 @@
+Homework Quiz
+1. Overfitting - DOB, already same age, postcode probably not relevant
+2. Second model with 33559 AIC as is the lower score.
+3. Model has higher R2 showing best explanatory power but lower adjr2 - may be overfitting 
+    Model 1 has higher adjusted so more solid, use 1.
+4. RMSE on train and test are very close, not overfitted, if overfitted training RMSE be much lower
+5. Splitting of data into subsets, and training carried out on each subset seprately k number of times
+    to assess robustness and performance.
+6. Start with all available variables in model and sequentially remove the ones deemed unneccessay for 
+    the model. 
+7. feature selection which comapres all availale combinations, evaluates and selects the best option:
+    leaps() package
