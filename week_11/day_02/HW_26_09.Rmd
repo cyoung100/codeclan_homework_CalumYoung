@@ -1,0 +1,180 @@
+---
+title: "Decisions Tree Homework"
+output:
+  html_document:
+    df_print: paged
+---
+
+```{r}
+library(rpart)
+library(rpart.plot)
+library(tidyverse)
+
+library(tidyverse)
+titanic_set <- read_csv('titanic_decision_tree_data.csv')
+
+shuffle_index <- sample(1:nrow(titanic_set))
+
+# shuffle the data so class order isn't in order - need this for training/testing split later on 
+titanic_set <- titanic_set[shuffle_index, ]
+```
+
+# Question 1
+
+```{r}
+titanic_clean <- titanic_set %>%
+  filter(survived %in% c(0,1)) %>%
+# Convert to factor level
+    mutate(sex = as.factor(sex), 
+           age_status = as.factor(if_else(age <= 16, "child", "adult")),
+         class = factor(pclass, levels = c(3,2,1), labels = c("Lower", "Middle", "Upper")), 
+           survived_flag = factor(survived, levels = c(0,1), labels = c("No", "Yes")), 
+           port_embarkation = as.factor(embarked)) %>%
+  select(sex, age_status, class, port_embarkation, sib_sp, parch, survived_flag) %>%
+  na.omit()
+```
+
+
+# Question 2
+
+```{r}
+titanic_clean %>% 
+  group_by(age_status, sex, class, survived_flag ) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(y = count, x = age_status, fill = survived_flag))+
+  geom_bar(stat = "identity", position = "dodge") +facet_grid(sex~class)
+```
+
+```{r}
+titanic_clean %>%
+ group_by(port_embarkation, sex, sib_sp, survived_flag, class ) %>% 
+  summarise(count = n()) %>% 
+  ggplot(aes(y = count, x = port_embarkation, fill = survived_flag))+
+  geom_bar(stat = "identity", position = "dodge") +facet_grid(sib_sp~class)
+```
+
+```{r}
+titanic_clean <- titanic_clean %>% 
+  ungroup()
+```
+
+
+
+Expectation is lower class male adults had greatest probability of death, by a large margin. Upper class and middle female adults had highest chance of survival. Upper class adult only group to have more survive than perish. Variables in plot seem most useful; age, class, sex. Port of embarkation shows some difference. Siblings seem irrelevnat as mainly have 0, parch could influence if a child srvived or not but feel this wont be seen in model as children numbers were much lower overall. 
+
+# Question 3 
+
+```{r}
+#test / train split
+n_data <- nrow(titanic_clean)
+test_index <- sample(1:n_data, size = n_data*0.2)
+
+# create a test set
+titanic_test <- slice(titanic_clean, test_index)
+
+# create training set
+titanic_train <- slice(titanic_clean, -test_index)
+
+#check split %
+712/100*20
+```
+Check test/train split proportions are equal
+```{r}
+titanic_test %>% 
+  janitor::tabyl(survived_flag)
+```
+```{r}
+titanic_train %>% 
+  janitor::tabyl(survived_flag)
+```
+Very closely balanced. 
+
+# Question 4 
+
+```{r}
+# build tree model
+titanic_fit <- rpart(
+  formula = survived_flag ~ .,
+  data = titanic_train,
+  method = "class"
+)
+
+
+#plot tree
+rpart.plot(titanic_fit,
+      yesno = 2, 
+       type = 2, 
+       fallen.leaves = TRUE,
+      faclen = 6,
+           digits = 2, 
+           split.border.col =1)
+
+
+```
+
+Most important variable was sex, if male had (64% of data) 0.21 of not surviving, relative to female's 0.74. Next most important was class; lower, middle, if in this group 50% of survival (0.16). Next predictor was age followed by port of embarkation; if adult 0.12 chance of survival, same level if embarkation was Q/S. Least relevant but still influential were number of siblings, those with >= 2 has 0.29 chance of not surviving whereas those without had 0.7. This is artifact of data because overall there were way more people on board without siblings than with them. Finally, those with no parent/guardian were less likely to survive (0.29) than those >1 guardian (0.88). Overall, lower/middle class males were much more likely to not survive. 
+
+# Question 6
+
+```{r}
+library(modelr)
+```
+```{r}
+# add predictions
+titanic_test_pred <- titanic_test %>% 
+  add_predictions(titanic_fit, type = "class")
+```
+
+```{r}
+titanic_test_pred %>% 
+  select(survived_flag, pred, sex, age_status, class, port_embarkation)
+```
+Looks pretty spot on, now to check model performance
+
+```{r}
+library(yardstick)
+
+conf_mat <- titanic_test_pred %>% 
+  conf_mat(truth = survived_flag, estimate = pred)
+
+conf_mat
+
+```
+
+
+Number of true positives (Yes) and true negatives are high (78) shows model is pretty accurate at estimating survival probability based on input predictors. Number of False Positives slightly high, 26 more people died than the model predicted indicating another factor not in the model contributed to higher mortality. False negative quite low. 
+
+
+Testing sensitivity and specificity
+```{r}
+accuracy <- titanic_test_pred %>% 
+  accuracy(truth = survived_flag, estimate = pred)
+
+accuracy
+```
+
+
+
+
+```{r}
+#sensitivity 
+titanic_test_pred %>%
+  yardstick::sensitivity(truth = survived_flag, estimate = pred)
+```
+
+```{r}
+#specificity 
+titanic_test_pred %>%
+  yardstick::specificity(truth = survived_flag, estimate = pred)
+```
+# Using combined out package - caret
+```{r}
+library(caret)
+
+confusionMatrix(data = titanic_test_pred$pred, reference = titanic_test_pred$survived_flag)
+
+```
+0.78 chance of model correctly predicting someones survival. Sensitivity is quite high may say a person survived when they didn't (0.94) Specificity lower (0.55) so chance of detecting false positives is strong. 
+
+
+Q to ask, go over what spec/sens means in terms of pro/con- confused by terms false negative when its combined with yes no, is the positive in this case no because thats the outcome we're prediciting?
