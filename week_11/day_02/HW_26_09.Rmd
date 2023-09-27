@@ -60,9 +60,10 @@ titanic_clean <- titanic_clean %>%
 
 
 
-Expectation is lower class male adults had greatest probability of death, by a large margin. Upper class and middle female adults had highest chance of survival. Upper class adult only group to have more survive than perish. Variables in plot seem most useful; age, class, sex. Port of embarkation shows some difference. Siblings seem irrelevnat as mainly have 0, parch could influence if a child srvived or not but feel this wont be seen in model as children numbers were much lower overall. 
+Expectation is lower class male adults had greatest probability of death, by a large margin. Upper class and middle female adults had highest chance of survival. Upper class adult only group to have more survive than perish. Variables in plot seem most useful; age, class, sex. Port of embarkation shows some difference. Siblings seem irrelevant as mainly have 0, parch could influence if a child srvived or not but feel this wont be seen in model as children numbers were much lower overall. 
 
 # Question 3 
+#when selecting fraction of testing, use 20-25% but if few columns of categorical factors can get away with less, also depends on size of original set
 
 ```{r}
 #test / train split
@@ -103,16 +104,17 @@ titanic_fit <- rpart(
 #plot tree
 rpart.plot(titanic_fit,
       yesno = 2, 
-       type = 2, 
-       fallen.leaves = TRUE,
-      faclen = 6,
-           digits = 2, 
-           split.border.col =1)
+      # type = 2, 
+     #  fallen.leaves = TRUE,
+      #faclen = 6,
+       #    digits = 2, 
+          # split.border.col =1
+     )
 
 
 ```
 
-Most important variable was sex, if male had (64% of data) 0.21 of not surviving, relative to female's 0.74. Next most important was class; lower, middle, if in this group 50% of survival (0.16). Next predictor was age followed by port of embarkation; if adult 0.12 chance of survival, same level if embarkation was Q/S. Least relevant but still influential were number of siblings, those with >= 2 has 0.29 chance of not surviving whereas those without had 0.7. This is artifact of data because overall there were way more people on board without siblings than with them. Finally, those with no parent/guardian were less likely to survive (0.29) than those >1 guardian (0.88). Overall, lower/middle class males were much more likely to not survive. 
+Most important variable was sex, if male (64% of data) had  0.21 of not surviving, relative to female's 0.74. Next most important was class; lower, middle, if in this group 50% of survival (0.16). Next predictor was age followed by port of embarkation; if adult 0.12 chance of survival, same level if embarkation was Q/S. Least relevant but still influential were number of siblings, those with >= 2 has 0.29 chance of not surviving whereas those without had 0.7. This is artifact of data because overall there were way more people on board without siblings than with them. Finally, those with no parent/guardian were less likely to survive (0.29) than those >1 guardian (0.88). Overall, lower/middle class males were much more likely to not survive. 
 
 # Question 6
 
@@ -178,3 +180,22 @@ confusionMatrix(data = titanic_test_pred$pred, reference = titanic_test_pred$sur
 
 
 Q to ask, go over what spec/sens means in terms of pro/con- confused by terms false negative when its combined with yes no, is the positive in this case no because thats the outcome we're prediciting?
+
+
+
+
+
+
+###################################################################################
+
+Reproducibility
+it's a crisis / paradox -> we want to use random sampling, keep things statistically proper (we don't want to cherry pick a good result), but we want others to get the same results as us.
+setting a seed (maybe try a few to see what's expected but then settle on one 'decent' for reproducibility)
+interpret things in a general way rather than specific
+this tree says that: if woman and under 30 then 70% you'll survive, generally we see this value between 60 and 80%
+after randomly splitting test /train save those datasets to files. load them in rather than recreate every time you knit.
+after generating a tree -> save results of that tree .Rdata / RDS. load in and then interpret
+Sensitivity vs Specificity
+Sensitivity -> how often to predict 'positives' correctly
+Specificity -> how often do we predict 'negatives' correctly
+Accuracy -> how often is the model correct

@@ -1,0 +1,104 @@
+---
+title: "HW_27_09"
+output: html_notebook
+---
+
+Load libraries and data
+```{r}
+library(tidyverse)
+library(factoextra)
+library(viridis)
+mall <- read_csv("mall_customers.csv")
+```
+```{r}
+# adjust names and change sex to num as categ not used in k means.
+# havent scaled as numbers kind of close
+
+mall <- mall %>% 
+  rename(annual_income = "Annual Income (k$)",
+         spend_score = "Spending Score (1-100)") %>% 
+  mutate(Gender = as.factor(if_else(Gender == "Male",1,0 )))
+
+mall <- janitor::clean_names(mall) %>% 
+  select(-customer_id)
+
+
+mall_scale <- mall %>% 
+  select(spend_score, annual_income) %>% 
+  mutate(across(where(is.numeric),scale))
+
+```
+
+
+# Task 1
+
+```{r}
+mall %>% 
+  ggplot(aes(x = annual_income, y = spend_score, color = age, shape = gender)) +
+  geom_point() +
+  scale_color_viridis(option = "magma")
+```
+Clustering evident almost in x shaped pattern with diverse grouping in centre. seems people wiht low income have high spend score, maybe people who are frivolous  with cash. High income have varied spend score, some spend high others retain caash more astutely. Majority points around x centre. 50k income, 50 spend score, most diverse grouping. 
+
+
+# Task 2
+
+```{r}
+library(broom)
+
+#define max k 
+max_k <- 15
+
+
+clustered_data <- kmeans(mall_scale %>%                            select(spend_score,annual_income),
+                         centers = 4,
+                         nstart = 25)
+
+
+glance(clustered_data)
+
+
+k_clusters <- tibble(k = 1:max_k)
+
+clustered_k <- k_clusters %>% 
+  mutate(
+    kclust = map(k, ~kmeans(mall_scale %>% select(spend_score, annual_income), centers = .x, nstart = 25)),
+    glanced = map(kclust, glance),
+    augmented = map(kclust, augment, mall),
+  )
+```
+
+```{r}
+fviz_nbclust(mall_scale, kmeans, method = "silhouette", nstart = 25)
+```
+
+5 clusters seems best number. 
+
+
+
+
+
+```{r}
+clustered_k %>% 
+  filter(k == 5) %>% 
+  unnest(augmented) %>% 
+  ggplot(aes(y = spend_score, x = annual_income, colour = age, shape = gender)) +
+           geom_point() +
+  stat_ellipse(aes(group = .cluster)) +
+  scale_color_viridis(option = "magma"
+  )
+```
+
+Ellipses show clear clustered groups, 5 appears to be solid number.
+
+(males are triangle)
+
+Top right cluster: younger, wealthier group. Young professionals with more cash appear willing to spend. Mix of male and female.
+
+Bottom right, older, wealthier, mainly men, have higher incomes but less likely to spend. 
+
+Middle cluser: diverse mix of gender and age, average income and average spend, more likely to buy middle priced items. Little luxuries.
+
+Top left: lower income but big speders. Mainly younger population with little experience that blow what little cash they have. 
+
+Bottom left: older group with little income, probably on pensions, not likely to spend much. 
