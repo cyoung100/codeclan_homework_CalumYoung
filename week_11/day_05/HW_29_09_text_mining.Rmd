@@ -1,0 +1,60 @@
+---
+title: "HW_02_10"
+output: html_notebook
+---
+
+```{r}
+library(dplyr)
+library(tidytext)
+library(janeaustenr)
+```
+
+#Q1
+```{r}
+jane_words <- austen_books() %>% 
+  filter(book == "Mansfield Park" | book == "Sense & Sensibility") %>% 
+  unnest_tokens(word, text) %>% 
+  count(word, book, sort = T)
+```
+
+```{r}
+jane_words %>% 
+  filter(book == "Mansfield Park")
+```
+
+```{r}
+jane_words %>% 
+  filter(book == "Sense & Sensibility")
+```
+
+#2
+```{r}
+jane_words <- jane_words %>% 
+  anti_join(stop_words, "word")
+```
+
+```{r}
+jane_words %>% 
+  filter(book == "Mansfield Park")
+```
+```{r}
+jane_words %>% 
+  filter(book == "Sense & Sensibility")
+```
+
+#3
+```{r}
+jane_words_sent <-
+  jane_words %>%
+  inner_join(get_sentiments("bing"))
+
+jane_words_sent %>%
+  filter(book == "Mansfield Park")
+
+```
+
+```{r}
+jane_words_sent %>%
+  filter(book == "Sense & Sensibility")
+```
+
